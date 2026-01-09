@@ -49,7 +49,8 @@ def bereken_totaal():
 
     return diensten_clean, subtotaal, btw, totaal
 
-def maak_pdf_en_excel(diensten_final, klant, subtotaal, btw, totaal):
+def maak_pdf_en_excel(diensten_final, klant_naam, klant_adres, klant_email, subtotaal, btw, totaal):
+
     nu = datetime.now()
     nummer = nu.strftime("PWC%Y%m%d%H%M")
     datum_str = nu.strftime('%d-%m-%Y')
@@ -153,11 +154,14 @@ def maak_pdf_en_excel(diensten_final, klant, subtotaal, btw, totaal):
         left_cell = []
 
     left_cell += [
-        Paragraph("<b>ProWashCare – Offerte</b>", styles["Title"]),
-        Paragraph(f"Klant: {klant}", styles["Normal"]),
-        Paragraph(f"Offertenummer: {nummer}", styles["Normal"]),
-        Paragraph(f"Datum: {datum_str}", styles["Normal"]),
-    ]
+    Paragraph("<b>ProWashCare – Offerte</b>", styles["Title"]),
+    Paragraph(f"<b>Naam:</b> {klant_naam}", styles["Normal"]),
+    Paragraph(f"<b>Adres:</b> {klant_adres.replace(chr(10), '<br/>')}", styles["Normal"]),
+    Paragraph(f"<b>E-mail:</b> {klant_email}", styles["Normal"]),
+    Paragraph(f"Offertenummer: {nummer}", styles["Normal"]),
+    Paragraph(f"Datum: {datum_str}", styles["Normal"]),
+]
+
 
     right_cell = [
         Spacer(1, 2*cm),
@@ -290,12 +294,31 @@ st.write("---")
 st.write(f"**Subtotaal (excl. btw):** € {subtotaal:.2f}")
 st.write(f"**BTW (21%):** € {btw:.2f}")
 st.write(f"**Totaal (incl. btw):** € {totaal:.2f}")
+#naam adres email#
+st.write("### Klantgegevens")
+
+col1, col2 = st.columns(2)
+with col1:
+    klant_naam = st.text_input("Naam", key="klant_naam")
+    klant_email = st.text_input("E-mail", key="klant_email")
+with col2:
+    klant_adres = st.text_area("Adres", key="klant_adres", height=80)
+#-----#
 
 if st.button("Maak offerte (Excel + PDF)"):
-    if not klant.strip():
-        st.error("Voer een klantnaam in!")
+    if not klant_naam.strip():
+    st.error("Voer een naam in!")
     else:
-        excel_buf, pdf_buf, nummer = maak_pdf_en_excel(diensten_final, klant, subtotaal, btw, totaal)
+        excel_buf, pdf_buf, nummer = maak_pdf_en_excel(
+    diensten_final,
+    klant_naam,
+    klant_adres,
+    klant_email,
+    subtotaal,
+    btw,
+    totaal
+)
+
         st.success(f"Offerte {nummer} klaar!")
 
         col1, col2 = st.columns(2)
