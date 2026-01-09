@@ -307,20 +307,30 @@ with col2:
 
 if st.button("Maak offerte (Excel + PDF)"):
     if not klant_naam.strip():
-    st.error("Voer een naam in!")
+        st.error("Voer een naam in!")
     else:
         excel_buf, pdf_buf, nummer = maak_pdf_en_excel(
-    diensten_final,
-    klant_naam,
-    klant_adres,
-    klant_email,
-    subtotaal,
-    btw,
-    totaal
-)
+            diensten_final,
+            klant_naam,
+            klant_adres,
+            klant_email,
+            subtotaal,
+            btw,
+            totaal
+        )
 
         st.success(f"Offerte {nummer} klaar!")
 
         col1, col2 = st.columns(2)
-        col1.download_button("📊 Download Excel", excel_buf, f"Offerte_{nummer}.xlsx", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
-        col2.download_button("📄 Download PDF", pdf_buf, f"Offerte_{nummer}.pdf", "application/pdf")
+        col1.download_button(
+            "📊 Download Excel",
+            excel_buf,
+            f"Offerte_{nummer}.xlsx",
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        )
+        col2.download_button(
+            "📄 Download PDF",
+            pdf_buf,
+            f"Offerte_{nummer}.pdf",
+            "application/pdf"
+        )
