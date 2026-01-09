@@ -218,7 +218,7 @@ if dienst == "Ramen wassen":
         groot_buiten = st.number_input("Grote ramen - Buiten", min_value=0, step=1)
         dak_buiten = st.number_input("Dakramen - Buiten", min_value=0, step=1)
 
-    berekend = klein_binnen*2.0 + klein_buiten*1.5 + groot_binnen*2.5 + groot_buiten*2.0 + dak_binnen*2.5 + dak_buiten*2.5
+    berekend = klein_binnen*1.5 + klein_buiten*1.7 + groot_binnen*2.0 + groot_buiten*2.2 + dak_binnen*2.5 + dak_buiten*2.5
     details = []
     if klein_binnen or klein_buiten: details.append(f"Kleine ramen: {klein_binnen} binnen, {klein_buiten} buiten")
     if groot_binnen or groot_buiten: details.append(f"Grote ramen: {groot_binnen} binnen, {groot_buiten} buiten")
@@ -254,7 +254,7 @@ elif dienst == "Oprit / Terras / Bedrijfsterrein":
     if reinigen: berekend += m2 * 3.5; opties.append("Reinigen")
     if zand: berekend += m2 * 1.0; opties.append("Zand invegen")
     if onkruid: berekend += m2 * 2.0; opties.append("Onkruidmijdend voegzand")
-    if coating: berekend += m2 * 3.5; opties.append("Coating")
+    if coating: berekend += m2 * 5.0; opties.append("Coating")
 
     if opties:
         omschrijving = f"{type_keuze}\n{m2} m² ({', '.join(opties)})"
