@@ -13,10 +13,10 @@ import os
 
 PRIJZEN = {
     "ramen": {
-        "klein_binnen": 1.5,
-        "klein_buiten": 1.7,
-        "groot_binnen": 2.0,
-        "groot_buiten": 2.2,
+        "klein_binnen": 2.0,
+        "klein_buiten": 1.5,
+        "groot_binnen": 2.5,
+        "groot_buiten": 2.0,
         "dak_binnen": 2.5,
         "dak_buiten": 2.5,
         "minimum": 50.0
@@ -34,7 +34,7 @@ PRIJZEN = {
         "reinigen": 3.5,
         "zand": 1.0,
         "onkruid": 2.0,
-        "coating": 5.0,
+        "coating": 3.5,
         "minimum": 299.0
     },
     "vervoer": 8.0
