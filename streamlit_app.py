@@ -192,8 +192,8 @@ if dienst == "Ramen wassen":
             # Pas de minimumprijs toe voor de ramen wassen (alleen als de prijs onder 50 euro is)
             totaal = max(50, totaal_diensten)  # Minimumprijs wordt nog steeds toegepast voor de ramen wassen
 
-            # Voeg vervoerskosten toe als de som van de diensten en vervoerskosten > 50 euro
-            if totaal + VERVOERSKOSTEN > 50:
+            # Voeg vervoerskosten toe als het totaal van de diensten en vervoerskosten > 50 euro
+            if len(st.session_state.diensten) > 0 and totaal + VERVOERSKOSTEN > 50:
                 totaal += VERVOERSKOSTEN  # Voeg de vervoerskosten toe bij een totaal van 50+
 
             # Maak een samenvatting van de gekozen ramen
@@ -216,48 +216,7 @@ if dienst == "Ramen wassen":
         else:
             st.warning("Voer minimaal één raamoptie in.")  # Laat een waarschuwing zien als er geen ramen geselecteerd zijn
 
-# ---------------- GEVEL ----------------
-elif dienst == "Gevelreiniging":
-    m2 = st.number_input("Oppervlakte (m²)", 0.1, step=0.1)
-    impreg = st.checkbox("Impregneren")
-    if st.button("Dienst toevoegen"):
-        regels = [("Gevel reinigen", m2, m2 * 5)]
-        if impreg:
-            regels.append(("Impregneren", m2, m2 * 4))
-        totaal = max(299, sum(r[2] for r in regels))
-        st.session_state.diensten.append({
-            "titel": "Gevelreiniging",
-            "regels": regels,
-            "totaal": totaal
-        })
-
-# ---------------- OPRIT ----------------
-elif dienst == "Oprit / Terras / Bedrijfsterrein":
-    type_k = st.radio("Type", ["Oprit", "Terras", "Bedrijfsterrein"], horizontal=True)
-    m2 = st.number_input("Oppervlakte (m²)", 0.1, step=0.1)
-
-    c1, c2, c3, c4 = st.columns(4)
-    reinigen = c1.checkbox("Reinigen")
-    zand = c2.checkbox("Zand invegen")
-    onkruid = c3.checkbox("Onkruidmijdend voegzand")
-    coating = c4.checkbox("Coating")
-
-    if st.button("Dienst toevoegen"):
-        regels = []
-        if reinigen: regels.append(("Reinigen", m2, m2 * 3.5))
-        if zand: regels.append(("Zand invegen", m2, m2 * 1))
-        if onkruid: regels.append(("Onkruidmijdend voegzand", m2, m2 * 2))
-        if coating: regels.append(("Coating", m2, m2 * 3.5))
-
-        if regels:
-            st.session_state.diensten.append({
-                "titel": type_k,
-                "regels": regels,
-                "totaal": sum(r[2] for r in regels)
-            })
-
 # ---------------- VERVOERSKOSTEN ----------------
-st.divider()
 if st.button("🚗 Vervoerskosten toevoegen"):
     st.session_state.diensten.append({
         "titel": "Vervoerskosten",
