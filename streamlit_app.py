@@ -39,35 +39,43 @@ dienst = st.selectbox(
 )
 
 # ---------------- RAMEN WASSEN ----------------
-if dienst == "Ramen wassen":
-    st.subheader("Ramen wassen")
+st.subheader("Ramen wassen")
 
-    c1, c2, c3 = st.columns(3)
+# BINNEN
+st.markdown("**Binnen**")
+b1, b2, b3 = st.columns(3)
 
-    with c1:
-        st.markdown("**Kleine ramen – Binnen**")
-        kb = st.number_input("", 0, step=1, key="kb")
+with b1:
+    st.markdown("Kleine ramen")
+    kb = st.number_input("", 0, step=1, key="kb")
 
-        st.markdown("&nbsp;")  # spacer
+with b2:
+    st.markdown("Grote ramen")
+    gb = st.number_input("", 0, step=1, key="gb")
 
-        st.markdown("**Kleine ramen – Buiten**")
-        kbui = st.number_input("", 0, step=1, key="kbui")
+with b3:
+    st.markdown("Dakramen / moeilijk bereikbaar")
+    db = st.number_input("", 0, step=1, key="db")
 
-    with c2:
-        st.markdown("**Grote ramen – Binnen**")
-        gb = st.number_input("", 0, step=1, key="gb")
 
-        st.markdown("&nbsp;")  # spacer
+st.markdown("---")
 
-        st.markdown("**Grote ramen – Buiten**")
-        gbui = st.number_input("", 0, step=1, key="gbui")
+# BUITEN
+st.markdown("**Buiten**")
+b4, b5, b6 = st.columns(3)
 
-    with c3:
-        st.markdown("**Dakramen / moeilijk bereikbaar – Binnen**")
-        db = st.number_input("", 0, step=1, key="db")
+with b4:
+    st.markdown("Kleine ramen")
+    kbui = st.number_input("", 0, step=1, key="kbui")
 
-        st.markdown("**Dakramen / moeilijk bereikbaar – Buiten**")
-        dbui = st.number_input("", 0, step=1, key="dbui")
+with b5:
+    st.markdown("Grote ramen")
+    gbui = st.number_input("", 0, step=1, key="gbui")
+
+with b6:
+    st.markdown("Dakramen / moeilijk bereikbaar")
+    dbui = st.number_input("", 0, step=1, key="dbui")
+
 
 
     if st.button("Dienst toevoegen", key="ramen"):
