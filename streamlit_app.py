@@ -1,228 +1,247 @@
 import streamlit as st
-from openpyxl import Workbook
-from reportlab.platypus import SimpleDocTemplate, Paragraph, Table
-from reportlab.lib.styles import getSampleStyleSheet
 from datetime import datetime
+from openpyxl import Workbook
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Table, Spacer
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.lib.enums import TA_RIGHT
 import io
 
-# ================= CONFIG =================
+# ---------------- CONFIG ----------------
 st.set_page_config(page_title="ProWashCare Offerte", layout="centered")
 st.title("🧼 ProWashCare – Offerte Tool")
-
-BEDRIJFSNAAM = "ProWashCare"
-ADRES = "2930 Brasschaat, Antwerpen"
-TELEFOON = "+32 470 87 43 39"
-EMAIL = "dennisg@prowashcare.com"
-WEBSITE = "www.prowashcare.com"
 
 BTW = 0.21
 VERVOERSKOSTEN = 8.0
 
-# ================= SESSION =================
+# ---------------- SESSION STATE ----------------
 if "diensten" not in st.session_state:
     st.session_state.diensten = []
 
-# ================= FUNCTIES =================
+# ---------------- HULPFUNCTIES ----------------
 def bereken_totalen():
     subtotaal = sum(d["totaal"] for d in st.session_state.diensten)
     btw = subtotaal * BTW
     totaal = subtotaal + btw
     return subtotaal, btw, totaal
 
-def maak_pdf_excel():
-    now = datetime.now()
-    nummer = now.strftime("PWC%Y%m%d%H%M")
-    datum = now.strftime("%d-%m-%Y")
 
+def maak_pdf(klant, adres, email):
+    buffer = io.BytesIO()
+    doc = SimpleDocTemplate(buffer, rightMargin=36, leftMargin=36, topMargin=36)
+    styles = getSampleStyleSheet()
+
+    styles.add(ParagraphStyle(
+        name="Rechts",
+        parent=styles["Normal"],
+        alignment=TA_RIGHT
+    ))
+
+    content = []
+
+    # ---------- HEADER ----------
+    content.append(Paragraph("<b>ProWashCare</b>", styles["Title"]))
+    content.append(Paragraph("Professionele reinigingsdiensten", styles["Normal"]))
+    content.append(Spacer(1, 12))
+
+    content.append(Paragraph(
+        f"<b>Offerte voor:</b><br/>{klant}<br/>{adres}<br/>{email}",
+        styles["Normal"]
+    ))
+
+    content.append(Paragraph(
+        f"Datum: {datetime.now().strftime('%d-%m-%Y')}",
+        styles["Rechts"]
+    ))
+
+    content.append(Spacer(1, 20))
+
+    # ---------- DIENSTEN ----------
+    for d in st.session_state.diensten:
+        content.append(Paragraph(f"<b>{d['titel']}</b>", styles["Heading3"]))
+
+        table_data = []
+        for r in d["regels"]:
+            table_data.append([
+                f"– {r[0]}",
+                f"€ {r[2]:.2f}"
+            ])
+
+        table_data.append([
+            "<b>Subtotaal</b>",
+            f"<b>€ {d['totaal']:.2f}</b>"
+        ])
+
+        content.append(Table(
+            table_data,
+            colWidths=[350, 100],
+            hAlign="LEFT"
+        ))
+        content.append(Spacer(1, 14))
+
+    # ---------- TOTALEN ----------
     subtotaal, btw, totaal = bereken_totalen()
 
-    # -------- EXCEL --------
+    totalen = [
+        ["Subtotaal", f"€ {subtotaal:.2f}"],
+        ["BTW 21%", f"€ {btw:.2f}"],
+        ["Totaal", f"€ {totaal:.2f}"]
+    ]
+
+    content.append(Spacer(1, 12))
+    content.append(Table(totalen, colWidths=[350, 100]))
+
+    doc.build(content)
+    buffer.seek(0)
+    return buffer
+
+
+def maak_excel(klant):
     wb = Workbook()
     ws = wb.active
     ws.title = "Offerte"
 
-    ws["A1"] = "ProWashCare – Offerte"
-    ws["A3"] = f"Klant: {klant_naam}"
-    ws["A4"] = f"Adres: {klant_adres}"
-    ws["A5"] = f"E-mail: {klant_email}"
-    ws["A6"] = f"Offertenummer: {nummer}"
-    ws["A7"] = f"Datum: {datum}"
+    ws.append(["ProWashCare – Offerte"])
+    ws.append([f"Klant: {klant}"])
+    ws.append([])
 
-    ws["A9"] = "Omschrijving"
-    ws["B9"] = "Bedrag (€)"
-
-    r = 10
+    ws.append(["Omschrijving", "Bedrag (€)"])
     for d in st.session_state.diensten:
-        for oms, prijs in d["regels"]:
-            ws[f"A{r}"] = oms
-            ws[f"B{r}"] = prijs
-            r += 1
+        for r in d["regels"]:
+            ws.append([r[0], r[2]])
+        ws.append([f"Totaal {d['titel']}", d["totaal"]])
 
-    ws[f"A{r}"] = "Subtotaal"
-    ws[f"B{r}"] = subtotaal
-    r += 1
-    ws[f"A{r}"] = "BTW 21%"
-    ws[f"B{r}"] = btw
-    r += 1
-    ws[f"A{r}"] = "Totaal"
-    ws[f"B{r}"] = totaal
+    subtotaal, btw, totaal = bereken_totalen()
+    ws.append([])
+    ws.append(["Subtotaal", subtotaal])
+    ws.append(["BTW 21%", btw])
+    ws.append(["Totaal", totaal])
 
-    excel = io.BytesIO()
-    wb.save(excel)
-    excel.seek(0)
+    buffer = io.BytesIO()
+    wb.save(buffer)
+    buffer.seek(0)
+    return buffer
 
-    # -------- PDF --------
-    pdf = io.BytesIO()
-    doc = SimpleDocTemplate(pdf)
-    styles = getSampleStyleSheet()
-    story = []
-
-    story.append(Paragraph("<b>ProWashCare – Offerte</b>", styles["Title"]))
-    story.append(Paragraph(f"Klant: {klant_naam}", styles["Normal"]))
-    story.append(Paragraph(f"Adres: {klant_adres}", styles["Normal"]))
-    story.append(Paragraph(f"E-mail: {klant_email}", styles["Normal"]))
-    story.append(Paragraph(f"Offertenummer: {nummer}", styles["Normal"]))
-    story.append(Paragraph(f"Datum: {datum}", styles["Normal"]))
-
-    data = [["Omschrijving", "Bedrag (€)"]]
-    for d in st.session_state.diensten:
-        for oms, prijs in d["regels"]:
-            data.append([oms, f"{prijs:.2f}"])
-
-    data += [
-        ["Subtotaal", f"{subtotaal:.2f}"],
-        ["BTW 21%", f"{btw:.2f}"],
-        ["Totaal", f"{totaal:.2f}"],
-    ]
-
-    story.append(Table(data, colWidths=[350, 100]))
-    doc.build(story)
-    pdf.seek(0)
-
-    return excel, pdf, nummer
-
-# ================= KLANT =================
+# ---------------- KLANTGEGEVENS ----------------
 st.subheader("👤 Klantgegevens")
-klant_naam = st.text_input("Naam")
-klant_email = st.text_input("E-mail")
-klant_adres = st.text_area("Adres")
+c1, c2 = st.columns(2)
+with c1:
+    klant_naam = st.text_input("Naam")
+    klant_email = st.text_input("E-mail")
+with c2:
+    klant_adres = st.text_area("Adres", height=80)
 
-# ================= DIENSTEN =================
+# ---------------- DIENST SELECTIE ----------------
 st.divider()
 dienst = st.selectbox("Dienst", [
-    "Ramen wassen", "Zonnepanelen", "Gevelreiniging", "Oprit / Terras / Bedrijfsterrein"
+    "Ramen wassen",
+    "Zonnepanelen",
+    "Gevelreiniging",
+    "Oprit / Terras / Bedrijfsterrein"
 ])
 
-# -------- RAMEN --------
+# ---------------- RAMEN WASSEN ----------------
 if dienst == "Ramen wassen":
-    kb = st.number_input("Kleine ramen binnen", 0)
-    kbui = st.number_input("Kleine ramen buiten", 0)
-    gb = st.number_input("Grote ramen binnen", 0)
-    gbui = st.number_input("Grote ramen buiten", 0)
-    db = st.number_input("Dakramen binnen", 0)
-    dbui = st.number_input("Dakramen buiten", 0)
+    st.subheader("Ramen wassen")
+
+    st.markdown("**Binnen**")
+    b1, b2, b3 = st.columns(3)
+    kb = b1.number_input("Kleine ramen", 0, step=1)
+    gb = b2.number_input("Grote ramen", 0, step=1)
+    db = b3.number_input("Dakramen / moeilijk bereikbaar", 0, step=1)
+
+    st.markdown("**Buiten**")
+    b4, b5, b6 = st.columns(3)
+    kbui = b4.number_input("Kleine ramen ", 0, step=1)
+    gbui = b5.number_input("Grote ramen ", 0, step=1)
+    dbui = b6.number_input("Dakramen / moeilijk bereikbaar ", 0, step=1)
 
     if st.button("Dienst toevoegen"):
         regels = []
-        if kb: regels.append(("Kleine ramen binnen", kb * 2))
-        if kbui: regels.append(("Kleine ramen buiten", kbui * 1.5))
-        if gb: regels.append(("Grote ramen binnen", gb * 2.5))
-        if gbui: regels.append(("Grote ramen buiten", gbui * 2))
-        if db: regels.append(("Dakramen binnen", db * 2.5))
-        if dbui: regels.append(("Dakramen buiten", dbui * 2.5))
+        if kb: regels.append(("Kleine ramen binnen", kb, kb * 2))
+        if kbui: regels.append(("Kleine ramen buiten", kbui, kbui * 1.5))
+        if gb: regels.append(("Grote ramen binnen", gb, gb * 2.5))
+        if gbui: regels.append(("Grote ramen buiten", gbui, gbui * 2))
+        if db: regels.append(("Dakramen binnen", db, db * 2.5))
+        if dbui: regels.append(("Dakramen buiten", dbui, dbui * 2.5))
 
-        totaal = max(50, sum(r[1] for r in regels))
-        st.session_state.diensten.append({
-            "titel": "Ramen wassen",
-            "regels": regels,
-            "totaal": totaal
-        })
-        st.success("Ramen wassen toegevoegd")
+        totaal = max(50, sum(r[2] for r in regels))
+        st.session_state.diensten.append({"titel": "Ramen wassen", "regels": regels, "totaal": totaal})
 
-# -------- ZONNEPANELEN --------
+# ---------------- ZONNEPANELEN ----------------
 elif dienst == "Zonnepanelen":
-    aantal = st.number_input("Aantal panelen", 1)
+    st.subheader("Zonnepanelen")
+    aantal = st.number_input("Aantal zonnepanelen", 1, step=1)
     if st.button("Dienst toevoegen"):
+        regels = [("Zonnepanelen reinigen", aantal, aantal * 5)]
         totaal = max(79, aantal * 5)
-        st.session_state.diensten.append({
-            "titel": "Zonnepanelen",
-            "regels": [("Zonnepanelen reinigen", totaal)],
-            "totaal": totaal
-        })
-        st.success("Zonnepanelen toegevoegd")
+        st.session_state.diensten.append({"titel": "Zonnepanelen", "regels": regels, "totaal": totaal})
 
-# -------- GEVEL --------
+# ---------------- GEVEL ----------------
 elif dienst == "Gevelreiniging":
-    m2 = st.number_input("Oppervlakte m²", 0.1)
+    st.subheader("Gevelreiniging")
+    m2 = st.number_input("Oppervlakte (m²)", 0.1, step=0.1)
     impreg = st.checkbox("Impregneren")
     if st.button("Dienst toevoegen"):
-        regels = [("Gevel reinigen", m2 * 5)]
+        regels = [("Gevel reinigen", m2, m2 * 5)]
         if impreg:
-            regels.append(("Impregneren", m2 * 4))
-        totaal = max(299, sum(r[1] for r in regels))
-        st.session_state.diensten.append({
-            "titel": "Gevelreiniging",
-            "regels": regels,
-            "totaal": totaal
-        })
-        st.success("Gevelreiniging toegevoegd")
+            regels.append(("Impregneren", m2, m2 * 4))
+        totaal = max(299, sum(r[2] for r in regels))
+        st.session_state.diensten.append({"titel": "Gevelreiniging", "regels": regels, "totaal": totaal})
 
-# -------- OPRIT / TERRAS --------
+# ---------------- OPRIT ----------------
 elif dienst == "Oprit / Terras / Bedrijfsterrein":
-    type_keuze = st.radio("Type", ["Oprit", "Terras", "Bedrijfsterrein"], horizontal=True)
-    m2 = st.number_input("Oppervlakte m²", 0.1)
-    reinigen = st.checkbox("Reinigen")
-    zand = st.checkbox("Zand invegen")
-    onkruid = st.checkbox("Onkruidmijdend voegzand")
-    coating = st.checkbox("Coating")
+    st.subheader("Oprit / Terras / Bedrijfsterrein")
+    type_k = st.radio("Type", ["Oprit", "Terras", "Bedrijfsterrein"], horizontal=True)
+    m2 = st.number_input("Oppervlakte (m²)", 0.1, step=0.1)
+
+    c1, c2, c3, c4 = st.columns(4)
+    reinigen = c1.checkbox("Reinigen")
+    zand = c2.checkbox("Zand invegen")
+    onkruid = c3.checkbox("Onkruidmijdend voegzand")
+    coating = c4.checkbox("Coating")
 
     if st.button("Dienst toevoegen"):
         regels = []
-        if reinigen: regels.append(("Reinigen", m2 * 3.5))
-        if zand: regels.append(("Zand invegen", m2 * 1.0))
-        if onkruid: regels.append(("Onkruidmijdend voegzand", m2 * 2.0))
-        if coating: regels.append(("Coating", m2 * 3.5))
+        if reinigen: regels.append(("Reinigen", m2, m2 * 3.5))
+        if zand: regels.append(("Zand invegen", m2, m2 * 1))
+        if onkruid: regels.append(("Onkruidmijdend voegzand", m2, m2 * 2))
+        if coating: regels.append(("Coating", m2, m2 * 3.5))
 
         if regels:
-            totaal = sum(r[1] for r in regels)
-            st.session_state.diensten.append({
-                "titel": type_keuze,
-                "regels": regels,
-                "totaal": totaal
-            })
-            st.success(f"{type_keuze} toegevoegd")
+            st.session_state.diensten.append({"titel": type_k, "regels": regels, "totaal": sum(r[2] for r in regels)})
 
-# ================= VERVOERSKOSTEN =================
+# ---------------- VERVOERSKOSTEN ----------------
 st.divider()
-if st.button("🚗 Vervoerskosten toevoegen (€8)"):
-    if not any(d["titel"] == "Vervoerskosten" for d in st.session_state.diensten):
-        st.session_state.diensten.append({
-            "titel": "Vervoerskosten",
-            "regels": [("Vervoerskosten", VERVOERSKOSTEN)],
-            "totaal": VERVOERSKOSTEN
-        })
-        st.success("Vervoerskosten toegevoegd")
+if st.button("🚗 Vervoerskosten toevoegen"):
+    st.session_state.diensten.append({
+        "titel": "Vervoerskosten",
+        "regels": [("Vervoerskosten", 1, VERVOERSKOSTEN)],
+        "totaal": VERVOERSKOSTEN
+    })
 
-# ================= OVERZICHT =================
+# ---------------- OVERZICHT ----------------
 st.divider()
 st.subheader("📋 Overzicht")
 
 for i, d in enumerate(st.session_state.diensten):
-    col1, col2, col3 = st.columns([6, 2, 1])
-    col1.write(d["titel"])
-    col2.write(f"€ {d['totaal']:.2f}")
-    if col3.button("❌", key=f"del_{i}"):
-        st.session_state.diensten.pop(i)
-        st.rerun()
+    with st.expander(d["titel"], expanded=False):
+        for r in d["regels"]:
+            st.write(f"{r[0]} – € {r[2]:.2f}")
+        st.write(f"**Totaal: € {d['totaal']:.2f}**")
+        if st.button("❌ Verwijderen", key=f"del{i}"):
+            st.session_state.diensten.pop(i)
+            st.rerun()
 
-subtotaal, btw, totaal = bereken_totalen()
-st.write(f"**Subtotaal:** € {subtotaal:.2f}")
-st.write(f"**BTW:** € {btw:.2f}")
-st.write(f"## **Totaal:** € {totaal:.2f}")
+sub, btw, tot = bereken_totalen()
+st.write(f"Subtotaal: € {sub:.2f}")
+st.write(f"BTW: € {btw:.2f}")
+st.write(f"## Totaal: € {tot:.2f}")
 
-# ================= OFFERTES =================
+# ---------------- EXPORT ----------------
 st.divider()
-if st.button("📄 Maak offerte"):
-    excel, pdf, nr = maak_pdf_excel()
-    st.download_button("📊 Download Excel", excel, f"Offerte_{nr}.xlsx")
-    st.download_button("📄 Download PDF", pdf, f"Offerte_{nr}.pdf")
+if klant_naam:
+    col1, col2 = st.columns(2)
+    col1.download_button("📄 Maak PDF offerte", maak_pdf(klant_naam, klant_adres, klant_email), "offerte.pdf")
+    col2.download_button("📊 Maak Excel offerte", maak_excel(klant_naam), "offerte.xlsx")
+else:
+    st.info("Vul eerst klantgegevens in")
