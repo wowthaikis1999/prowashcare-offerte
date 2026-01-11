@@ -44,15 +44,12 @@ if dienst == "Ramen wassen":
 
     st.markdown("**Binnen**")
     b1, b2, b3 = st.columns(3)
-
     with b1:
         st.markdown("Kleine ramen")
         kb = st.number_input("", 0, step=1, key="kb")
-
     with b2:
         st.markdown("Grote ramen")
         gb = st.number_input("", 0, step=1, key="gb")
-
     with b3:
         st.markdown("Dakramen / moeilijk bereikbaar")
         db = st.number_input("", 0, step=1, key="db")
@@ -61,15 +58,12 @@ if dienst == "Ramen wassen":
 
     st.markdown("**Buiten**")
     b4, b5, b6 = st.columns(3)
-
     with b4:
         st.markdown("Kleine ramen")
         kbui = st.number_input("", 0, step=1, key="kbui")
-
     with b5:
         st.markdown("Grote ramen")
         gbui = st.number_input("", 0, step=1, key="gbui")
-
     with b6:
         st.markdown("Dakramen / moeilijk bereikbaar")
         dbui = st.number_input("", 0, step=1, key="dbui")
@@ -95,7 +89,6 @@ if dienst == "Ramen wassen":
 # ================= ZONNEPANELEN =================
 elif dienst == "Zonnepanelen":
     st.subheader("Zonnepanelen")
-
     aantal = st.number_input("Aantal zonnepanelen", 1, step=1)
 
     if st.button("Dienst toevoegen", key="panelen"):
@@ -112,7 +105,6 @@ elif dienst == "Zonnepanelen":
 # ================= GEVEL =================
 elif dienst == "Gevelreiniging":
     st.subheader("Gevelreiniging")
-
     m2 = st.number_input("Oppervlakte (m²)", 0.1, step=0.1)
     impregneren = st.checkbox("Impregneren")
 
@@ -174,15 +166,18 @@ if st.button("🚗 Vervoerskosten toevoegen (€8)"):
 st.divider()
 st.subheader("📋 Overzicht diensten")
 
-for d in st.session_state.diensten:
-    st.markdown(f"### {d['titel']}")
-    for oms, aantal, prijs in d["regels"]:
-        col1, col2 = st.columns([6, 2])
-        col1.write(f"{oms} ({aantal})")
-        col2.write(f"€ {prijs:.2f}")
-    st.markdown(f"**Totaal {d['titel']}: € {d['totaal']:.2f}**")
-    st.divider()
+for i, d in enumerate(st.session_state.diensten):
+    with st.expander(f"{d['titel']} – € {d['totaal']:.2f}", expanded=False):
+        for oms, aantal, prijs in d["regels"]:
+            col1, col2 = st.columns([6, 2])
+            col1.write(f"{oms} ({aantal})")
+            col2.write(f"€ {prijs:.2f}")
 
+        if st.button("❌ Verwijderen", key=f"del_{i}"):
+            st.session_state.diensten.pop(i)
+            st.rerun()
+
+# ---------------- TOTALEN ----------------
 subtotaal, btw, totaal = bereken_totalen()
 
 st.write(f"**Subtotaal:** € {subtotaal:.2f}")
