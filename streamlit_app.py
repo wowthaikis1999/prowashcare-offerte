@@ -47,6 +47,7 @@ def maak_pdf(klant, adres, email):
     nummer = datetime.now().strftime("PWC%Y%m%d%H%M")
     datum = datetime.now().strftime("%d-%m-%Y")
 
+    # ---------- HEADER ----------
     left = [
         Paragraph("<b>ProWashCare – Offerte</b>", styles["Title"]),
         Spacer(1, 6),
@@ -74,41 +75,57 @@ def maak_pdf(klant, adres, email):
     content.append(header)
     content.append(Spacer(1, 20))
 
-    data = [["Omschrijving", "Aantal", "Bedrag (€)"]]  # Toevoegen van de kolom 'Aantal'
+    # ---------- TABEL ----------
+    data = [["Omschrijving", "Aantal", "Bedrag (€)"]]
 
     for d in st.session_state.diensten:
-        content.append([Paragraph(f"<b>{d['titel']}</b>", styles["Normal"]), "", ""])
+        # Titelregel van dienst
+        data.append([
+            Paragraph(f"<b>{d['titel']}</b>", styles["Normal"]),
+            "",
+            ""
+        ])
+
         for r in d["regels"]:
-            omschrijving = r[0]
-            aantal = r[1]
-            prijs = r[2]
-            # Voeg aantal en prijs toe aan de tabel
-            data.append([f"– {omschrijving}", f"{aantal}x", f"€ {prijs:.2f}"])
-        data.append(["Subtotaal", "", f"€ {d['totaal']:.2f}"])
+            omschrijving, aantal, prijs = r
+            data.append([
+                f"– {omschrijving}",
+                f"{aantal}x",
+                f"{prijs:.2f}"
+            ])
+
+        data.append([
+            Paragraph("<b>Subtotaal</b>", styles["Normal"]),
+            "",
+            Paragraph(f"<b>{d['totaal']:.2f}</b>", styles["Normal"])
+        ])
+
         data.append(["", "", ""])
 
     subtotaal, btw, totaal = bereken_totalen()
 
-    data.append(["Subtotaal (excl. btw)", "", f"€ {subtotaal:.2f}"])
-    data.append(["BTW 21%", "", f"€ {btw:.2f}"])
+    data.append(["Subtotaal (excl. btw)", "", f"{subtotaal:.2f}"])
+    data.append(["BTW 21%", "", f"{btw:.2f}"])
     data.append([
         Paragraph("<b>Totaal (incl. btw)</b>", styles["Normal"]),
-        "", 
+        "",
         Paragraph(f"<b>{totaal:.2f}</b>", styles["Normal"]),
     ])
 
-    table = Table(data, colWidths=[12 * cm, 3 * cm, 3 * cm])  # Pas de kolombreedtes aan
+    table = Table(data, colWidths=[9 * cm, 3 * cm, 3 * cm])
     table.setStyle([
         ("GRID", (0, 0), (-1, -1), 0.25, "grey"),
         ("BACKGROUND", (0, 0), (-1, 0), "#EEEEEE"),
         ("ALIGN", (1, 1), (-1, -1), "RIGHT"),
+        ("VALIGN", (0, 0), (-1, -1), "TOP"),
     ])
 
     content.append(table)
-    doc.build(content)
 
+    doc.build(content)
     buffer.seek(0)
     return buffer
+
 
 def maak_excel(klant):
     wb = Workbook()
