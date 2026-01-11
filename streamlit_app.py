@@ -55,7 +55,15 @@ def maak_pdf(klant, adres, email):
     datum = datetime.now().strftime("%d-%m-%Y")
 
     # HEADER
-    
+    left = [
+        Paragraph("<b>ProWashCare – Offerte</b>", styles["Title"]),
+        Spacer(1, 6),
+        Paragraph(f"<b>Naam:</b> {klant}", styles["Normal"]),
+        Paragraph(f"<b>Adres:</b> {adres.replace(chr(10), '<br/>')}", styles["Normal"]),
+        Paragraph(f"<b>E-mail:</b> {email}", styles["Normal"]),
+        Paragraph(f"<b>Offertenummer:</b> {nummer}", styles["Normal"]),
+        Paragraph(f"<b>Datum:</b> {datum}", styles["Normal"]),
+    ]
 
     right = [
         Paragraph("<b>ProWashCare</b>", styles["Normal"]),
