@@ -181,8 +181,9 @@ if dienst == "Ramen wassen":
     if dbui: regels.append(("Dakramen buiten-Moeilijk bereikbare", dbui, dbui * 2.5))
 
     # Voeg vervoerskosten toe als dit de eerste dienst is
-        totaal_diensten = sum(r[2] for r in regels)
-        totaal = max(50, totaal_diensten)  # Minimumprijs wordt nog steeds toegepast voor de ramen wassen zonder vervoerskosten
+    # Controleer of regels niet leeg is voordat je de som maakt
+    totaal_diensten = sum(r[2] for r in regels) if regels else 0
+    totaal = max(50, totaal_diensten)  # Minimumprijs wordt nog steeds toegepast voor de ramen wassen zonder vervoerskosten
 
     # Voeg vervoerskosten alleen toe als het totaal > 50 is (niet in mindering brengen)
     if len(st.session_state.diensten) > 0 and totaal_diensten + VERVOERSKOSTEN > 50:
