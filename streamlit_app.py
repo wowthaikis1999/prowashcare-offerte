@@ -171,7 +171,7 @@ if dienst == "Ramen wassen":
     dbui = c6.number_input("Dakramen-Moeilijk bereikbare ", 0, step=1)
 
     if st.button("Dienst toevoegen"):
-        regels = []
+    regels = []
 
     # Controleer of het aantal ramen groter is dan 0 voor elke input
     if kb > 0: 
@@ -187,18 +187,16 @@ if dienst == "Ramen wassen":
     if dbui > 0: 
         regels.append(("Dakramen buiten-Moeilijk bereikbare", dbui, dbui * 2.5))
 
-    if regels:  # Controleer of er daadwerkelijk regels zijn toegevoegd
-        # Bereken het totaal van de prijzen (de derde waarde in de tuple)
+    # Controleer of de lijst regels niet leeg is
+    if len(regels) > 0:  # Als er regels zijn toegevoegd
         totaal_diensten = sum(r[2] for r in regels)  # Totaal van de prijzen uit de 'regels' lijst
+        totaal = max(50, totaal_diensten)  # Minimumprijs wordt nog steeds toegepast voor de ramen wassen
 
-        # Minimumprijs voor ramen wassen wordt nog steeds toegepast als het totaal lager is dan 50
-        totaal = max(50, totaal_diensten)
-
-        # Voeg vervoerskosten toe als het totaal van de diensten groter is dan 50
+        # Voeg vervoerskosten alleen toe als het totaal > 50 is (niet in mindering brengen)
         if totaal_diensten > 0 and totaal + VERVOERSKOSTEN > 50:
-            totaal += VERVOERSKOSTEN  # Voeg vervoerskosten toe als het totaal > 50
+            totaal += VERVOERSKOSTEN  # Voeg vervoerskosten toe bij een totaal van 50+.
 
-        # Samenvatting van de geselecteerde ramen
+        # Bepaal samenvatting
         samenvatting = []
         if kb or kbui: samenvatting.append(f"{kb + kbui} kleine ramen")
         if gb or gbui: samenvatting.append(f"{gb + gbui} grote ramen")
@@ -208,7 +206,6 @@ if dienst == "Ramen wassen":
         if samenvatting:
             titel += " (" + ", ".join(samenvatting) + ")"
 
-        # Voeg de dienst toe aan de session state
         st.session_state.diensten.append({
             "titel": titel,
             "regels": regels,
@@ -216,6 +213,7 @@ if dienst == "Ramen wassen":
         })
     else:
         st.warning("Voer minimaal één raamoptie in.")
+
 
 
 
