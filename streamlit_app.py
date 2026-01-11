@@ -74,25 +74,30 @@ def maak_pdf(klant, adres, email):
     content.append(header)
     content.append(Spacer(1, 20))
 
-    data = [["Omschrijving", "Bedrag (€)"]]
+    data = [["Omschrijving", "Aantal", "Bedrag (€)"]]  # Toevoegen van de kolom 'Aantal'
 
     for d in st.session_state.diensten:
-        data.append([Paragraph(f"<b>{d['titel']}</b>", styles["Normal"]), ""])
+        content.append([Paragraph(f"<b>{d['titel']}</b>", styles["Normal"]), "", ""])
         for r in d["regels"]:
-            data.append([f"– {r[0]}", f"{r[2]:.2f}"])
-        data.append(["Subtotaal", f"{d['totaal']:.2f}"])
-        data.append(["", ""])
+            omschrijving = r[0]
+            aantal = r[1]
+            prijs = r[2]
+            # Voeg aantal en prijs toe aan de tabel
+            data.append([f"– {omschrijving}", f"{aantal}x", f"€ {prijs:.2f}"])
+        data.append(["Subtotaal", "", f"€ {d['totaal']:.2f}"])
+        data.append(["", "", ""])
 
     subtotaal, btw, totaal = bereken_totalen()
 
-    data.append(["Subtotaal (excl. btw)", f"{subtotaal:.2f}"])
-    data.append(["BTW 21%", f"{btw:.2f}"])
+    data.append(["Subtotaal (excl. btw)", "", f"€ {subtotaal:.2f}"])
+    data.append(["BTW 21%", "", f"€ {btw:.2f}"])
     data.append([
         Paragraph("<b>Totaal (incl. btw)</b>", styles["Normal"]),
+        "", 
         Paragraph(f"<b>{totaal:.2f}</b>", styles["Normal"]),
     ])
 
-    table = Table(data, colWidths=[12 * cm, 3 * cm])
+    table = Table(data, colWidths=[12 * cm, 3 * cm, 3 * cm])  # Pas de kolombreedtes aan
     table.setStyle([
         ("GRID", (0, 0), (-1, -1), 0.25, "grey"),
         ("BACKGROUND", (0, 0), (-1, 0), "#EEEEEE"),
@@ -104,7 +109,6 @@ def maak_pdf(klant, adres, email):
 
     buffer.seek(0)
     return buffer
-
 
 def maak_excel(klant):
     wb = Workbook()
