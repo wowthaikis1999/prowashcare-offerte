@@ -173,10 +173,10 @@ elif dienst == "Oprit / Terras / Bedrijfsterrein":
     m2 = st.number_input("Oppervlakte (m²)", min_value=0.1, format="%.1f")
 
     col1, col2, col3, col4 = st.columns(4)
-    reinigen = col1.checkbox("Reinigen (€3,50 / m²)")
-    zand = col2.checkbox("Zand invegen (€1,00 / m²)")
-    onkruid = col3.checkbox("Onkruidmijdend voegzand (€2,00 / m²)")
-    coating = col4.checkbox("Coating (€3,50 / m²)")
+    reinigen = col1.checkbox("Reinigen")
+    zand = col2.checkbox("Zand invegen")
+    onkruid = col3.checkbox("Onkruidmijdend voegzand")
+    coating = col4.checkbox("Coating")
 
     bedrag = 0
     regels = []
