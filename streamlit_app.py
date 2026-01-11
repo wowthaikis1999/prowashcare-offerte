@@ -157,13 +157,13 @@ if dienst == "Ramen wassen":
     c1, c2, c3 = st.columns(3)
     kb = c1.number_input("Kleine ramen", 0, step=1)
     gb = c2.number_input("Grote ramen", 0, step=1)
-    db = c3.number_input("Dakramen", 0, step=1)
+    db = c3.number_input("Dakramen-Moeilijk bereikbare", 0, step=1)
 
     st.markdown("**Buiten**")
     c4, c5, c6 = st.columns(3)
     kbui = c4.number_input("Kleine ramen ", 0, step=1)
     gbui = c5.number_input("Grote ramen ", 0, step=1)
-    dbui = c6.number_input("Dakramen ", 0, step=1)
+    dbui = c6.number_input("Dakramen-Moeilijk bereikbare ", 0, step=1)
 
     if st.button("Dienst toevoegen"):
         regels = []
@@ -172,8 +172,8 @@ if dienst == "Ramen wassen":
         if kbui: regels.append(("Kleine ramen buiten", kbui, kbui * 1.5))
         if gb: regels.append(("Grote ramen binnen", gb, gb * 2.5))
         if gbui: regels.append(("Grote ramen buiten", gbui, gbui * 2))
-        if db: regels.append(("Dakramen binnen-Moeijlijk bereikbare", db, db * 2.5))
-        if dbui: regels.append(("Dakramen buiten-Moeijlijk bereikbare", dbui, dbui * 2.5))
+        if db: regels.append(("Dakramen binnen-Moeilijk bereikbare", db, db * 2.5))
+        if dbui: regels.append(("Dakramen buiten-Moeilijk bereikbare", dbui, dbui * 2.5))
 
         totaal = max(50, sum(r[2] for r in regels))
 
