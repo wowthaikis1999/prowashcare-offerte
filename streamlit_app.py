@@ -95,7 +95,7 @@ def maak_pdf(klant, adres, email):
         Paragraph(f"<b>{totaal:.2f}</b>", styles["Normal"]),
     ])
 
-    table = Table(data, colWidths=[12 * cm, 3 * cm, 3 * cm])
+    table = Table(data, colWidths=[12 * cm, 3 * cm, 3 * cm])  # Pas de kolombreedtes aan
     table.setStyle([
         ("GRID", (0, 0), (-1, -1), 0.25, "grey"),
         ("BACKGROUND", (0, 0), (-1, 0), "#EEEEEE"),
@@ -107,6 +107,7 @@ def maak_pdf(klant, adres, email):
 
     buffer.seek(0)
     return buffer
+
 
 def maak_excel(klant):
     wb = Workbook()
@@ -180,9 +181,9 @@ if dienst == "Ramen wassen":
         totaal_diensten = sum(r[2] for r in regels)  # Totaal van de prijzen uit de 'regels' lijst
         totaal = max(50, totaal_diensten)  # Minimumprijs wordt nog steeds toegepast voor de ramen wassen
 
-        # Voeg vervoerskosten alleen toe als het totaal > 50 is (niet in mindering brengen)
-        if totaal_diensten > 0 and totaal + VERVOERSKOSTEN > 50:
-            totaal += VERVOERSKOSTEN  # Voeg vervoerskosten toe bij een totaal van 50+
+        # Voeg vervoerskosten alleen toe als de gebruiker expliciet op de knop heeft geklikt
+        if "Vervoerskosten" in st.session_state.diensten:
+            totaal += VERVOERSKOSTEN  # Voeg de vervoerskosten toe als deze in de lijst met diensten staat
 
         # Bepaal samenvatting
         samenvatting = []
@@ -197,17 +198,6 @@ if dienst == "Ramen wassen":
         st.session_state.diensten.append({
             "titel": titel,
             "regels": regels,
-            "totaal": totaal
-        })
-
-# ---------------- ZONNEPANELEN ----------------
-elif dienst == "Zonnepanelen":
-    aantal = st.number_input("Aantal zonnepanelen", 1, step=1)
-    if st.button("Dienst toevoegen"):
-        totaal = max(79, aantal * 5)
-        st.session_state.diensten.append({
-            "titel": "Zonnepanelen",
-            "regels": [("Zonnepanelen reinigen", aantal, aantal * 5)],
             "totaal": totaal
         })
 
