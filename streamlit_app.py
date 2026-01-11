@@ -26,55 +26,93 @@ def bereken_totalen():
 
 
 def maak_pdf(klant, adres, email):
-    buffer = io.BytesIO()
-    doc = SimpleDocTemplate(buffer, rightMargin=36, leftMargin=36, topMargin=36)
-    styles = getSampleStyleSheet()
+    from reportlab.platypus import SimpleDocTemplate, Paragraph, Table, Spacer
+    from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+    from reportlab.lib.enums import TA_RIGHT
+    from reportlab.lib.pagesizes import A4
+    from reportlab.lib.units import cm
+    import io
+    from datetime import datetime
 
-    styles.add(ParagraphStyle(
-        name="Rechts",
-        parent=styles["Normal"],
-        alignment=TA_RIGHT
-    ))
+    buffer = io.BytesIO()
+    doc = SimpleDocTemplate(
+        buffer,
+        pagesize=A4,
+        rightMargin=2*cm,
+        leftMargin=2*cm,
+        topMargin=2*cm,
+        bottomMargin=2*cm
+    )
+
+    styles = getSampleStyleSheet()
+    styles.add(ParagraphStyle(name="Right", alignment=TA_RIGHT))
+    styles.add(ParagraphStyle(name="Bold", fontSize=10, spaceAfter=4, leading=12, fontName="Helvetica-Bold"))
 
     content = []
 
-    content.append(Paragraph("<b>ProWashCare</b>", styles["Title"]))
-    content.append(Paragraph("Professionele reinigingsdiensten", styles["Normal"]))
-    content.append(Spacer(1, 12))
+    # Offertenummer & datum
+    nummer = datetime.now().strftime("PWC%Y%m%d%H%M")
+    datum = datetime.now().strftime("%d-%m-%Y")
 
-    content.append(Paragraph(
-        f"<b>Offerte voor:</b><br/>{klant}<br/>{adres}<br/>{email}",
-        styles["Normal"]
-    ))
+    # HEADER
+    left = [
+        Paragraph("<b>ProWashCare – Offerte</b>", styles["Title"]),
+        Spacer(1, 6),
+        Paragraph(f"<b>Naam:</b> {klant}", styles["Normal"]),
+        Paragraph(f"<b>Adres:</b> {adres.replace(chr(10), '<br/>')}", styles["Normal"]),
+        Paragraph(f"<b>E-mail:</b> {email}", styles["Normal"]),
+        Paragraph(f"<b>Offertenummer:</b> {nummer}", styles["Normal"]),
+        Paragraph(f"<b>Datum:</b> {datum}", styles["Normal"]),
+    ]
 
-    content.append(Paragraph(
-        f"Datum: {datetime.now().strftime('%d-%m-%Y')}",
-        styles["Rechts"]
-    ))
+    right = [
+        Paragraph("<b>ProWashCare</b>", styles["Normal"]),
+        Paragraph("2930 Brasschaat, Antwerpen", styles["Normal"]),
+        Paragraph("Tel: +32 470 87 43 39", styles["Normal"]),
+        Paragraph("Email: dennisg@prowashcare.com", styles["Normal"]),
+        Paragraph("Website: www.prowashcare.com", styles["Normal"]),
+    ]
 
+    header = Table([[left, right]], colWidths=[10*cm, 5*cm])
+    header.setStyle([
+        ("VALIGN", (0,0), (-1,-1), "TOP"),
+        ("ALIGN", (1,0), (1,-1), "RIGHT"),
+    ])
+
+    content.append(header)
     content.append(Spacer(1, 20))
 
+    # TABEL DIENSTEN
+    data = [["Omschrijving", "Bedrag (€)"]]
+
     for d in st.session_state.diensten:
-        content.append(Paragraph(f"<b>{d['titel']}</b>", styles["Heading3"]))
-
-        rows = []
-        for omschrijving, aantal, prijs in d["regels"]:
-            rows.append([f"– {omschrijving}", f"€ {prijs:.2f}"])
-
-        rows.append(["<b>Subtotaal</b>", f"<b>€ {d['totaal']:.2f}</b>"])
-
-        content.append(Table(rows, colWidths=[350, 100]))
-        content.append(Spacer(1, 14))
+        data.append([Paragraph(f"<b>{d['titel']}</b>", styles["Normal"]), ""])
+        for r in d["regels"]:
+            data.append([f"– {r[0]}", f"{r[2]:.2f}"])
+        data.append([
+            Paragraph("<b>Subtotaal</b>", styles["Normal"]),
+            Paragraph(f"<b>{d['totaal']:.2f}</b>", styles["Normal"])
+        ])
+        data.append(["", ""])
 
     subtotaal, btw, totaal = bereken_totalen()
 
-    totals = [
-        ["Subtotaal", f"€ {subtotaal:.2f}"],
-        ["BTW 21%", f"€ {btw:.2f}"],
-        ["Totaal", f"€ {totaal:.2f}"],
-    ]
+    data.append(["Subtotaal (excl. btw)", f"{subtotaal:.2f}"])
+    data.append(["BTW 21%", f"{btw:.2f}"])
+    data.append([
+        Paragraph("<b>Totaal (incl. btw)</b>", styles["Normal"]),
+        Paragraph(f"<b>{totaal:.2f}</b>", styles["Normal"])
+    ])
 
-    content.append(Table(totals, colWidths=[350, 100]))
+    table = Table(data, colWidths=[12*cm, 3*cm])
+    table.setStyle([
+        ("GRID", (0,0), (-1,-1), 0.25, "grey"),
+        ("BACKGROUND", (0,0), (-1,0), "#EEEEEE"),
+        ("ALIGN", (1,1), (-1,-1), "RIGHT"),
+        ("VALIGN", (0,0), (-1,-1), "TOP"),
+    ])
+
+    content.append(table)
 
     doc.build(content)
     buffer.seek(0)
