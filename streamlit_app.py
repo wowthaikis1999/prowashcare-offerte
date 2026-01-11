@@ -259,8 +259,16 @@ st.subheader("📋 Overzicht")
 for i, d in enumerate(st.session_state.diensten):
     with st.expander(d["titel"]):
         for r in d["regels"]:
-            st.write(f"{r[0]} – € {r[2]:.2f}")
+            omschrijving = r[0]  # omschrijving van de dienst
+            aantal = r[1]         # aantal ramen of eenheid
+            prijs = r[2]          # prijs per raam of eenheid
+
+            # Toon het aantal, de omschrijving en de prijs per eenheid
+            st.write(f"{omschrijving} – {aantal}x – € {prijs:.2f}")
+
+        # Toon het subtotaal voor de dienst
         st.write(f"**Totaal: € {d['totaal']:.2f}**")
+
         if st.button("❌ Verwijderen", key=f"del{i}"):
             st.session_state.diensten.pop(i)
             st.rerun()
