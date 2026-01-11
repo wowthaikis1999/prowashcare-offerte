@@ -76,8 +76,6 @@ with b6:
     st.markdown("Dakramen / moeilijk bereikbaar")
     dbui = st.number_input("", 0, step=1, key="dbui")
 
-
-
     if st.button("Dienst toevoegen", key="ramen"):
         regels = []
         if kb: regels.append(("Kleine ramen binnen", kb, kb * 2.0))
