@@ -143,17 +143,25 @@ if st.button("🚚 Vervoerskosten toevoegen", key="add_vervoer"):
 
 # ================= OVERZICHT =================
 st.divider()
-st.subheader("📋 Overzicht")
+st.subheader("📋 Overzicht diensten")
 
-subtotaal = sum(p for _, p in st.session_state.diensten)
+subtotaal = 0.0
+
+for i, (oms, prijs) in enumerate(st.session_state.diensten):
+    col1, col2 = st.columns([6, 2])
+
+    # Omschrijving (meerdere regels mooi onder elkaar)
+    col1.markdown(oms.replace("\n", "  \n"))
+
+    # Prijs duidelijk zichtbaar
+    col2.markdown(f"**€ {prijs:.2f}**")
+
+    subtotaal += prijs
+
 btw = subtotaal * BTW
 totaal = subtotaal + btw
 
-for oms, prijs in st.session_state.diensten:
-    st.write(oms.replace("\n", "  \n"))
-    st.write(f"€ {prijs:.2f}")
-    st.write("---")
-
+st.divider()
 st.write(f"**Subtotaal:** € {subtotaal:.2f}")
 st.write(f"**BTW (21%):** € {btw:.2f}")
 st.write(f"## **Totaal:** € {totaal:.2f}")
