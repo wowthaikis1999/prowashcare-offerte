@@ -49,7 +49,8 @@ def bereken_totaal():
 
     return diensten_clean, subtotaal, btw, totaal
 
-def maak_pdf_en_excel(diensten_final, klant, subtotaal, btw, totaal):
+def maak_pdf_en_excel(diensten_final, klant_naam, klant_adres, klant_email, subtotaal, btw, totaal):
+
     nu = datetime.now()
     nummer = nu.strftime("PWC%Y%m%d%H%M")
     datum_str = nu.strftime('%d-%m-%Y')
@@ -153,11 +154,14 @@ def maak_pdf_en_excel(diensten_final, klant, subtotaal, btw, totaal):
         left_cell = []
 
     left_cell += [
-        Paragraph("<b>ProWashCare – Offerte</b>", styles["Title"]),
-        Paragraph(f"Klant: {klant}", styles["Normal"]),
-        Paragraph(f"Offertenummer: {nummer}", styles["Normal"]),
-        Paragraph(f"Datum: {datum_str}", styles["Normal"]),
-    ]
+    Paragraph("<b>ProWashCare – Offerte</b>", styles["Title"]),
+    Paragraph(f"<b>Naam:</b> {klant_naam}", styles["Normal"]),
+    Paragraph(f"<b>Adres:</b> {klant_adres.replace(chr(10), '<br/>')}", styles["Normal"]),
+    Paragraph(f"<b>E-mail:</b> {klant_email}", styles["Normal"]),
+    Paragraph(f"Offertenummer: {nummer}", styles["Normal"]),
+    Paragraph(f"Datum: {datum_str}", styles["Normal"]),
+]
+
 
     right_cell = [
         Spacer(1, 2*cm),
@@ -218,7 +222,7 @@ if dienst == "Ramen wassen":
         groot_buiten = st.number_input("Grote ramen - Buiten", min_value=0, step=1)
         dak_buiten = st.number_input("Dakramen - Buiten", min_value=0, step=1)
 
-    berekend = klein_binnen*1.5 + klein_buiten*1.7 + groot_binnen*2.0 + groot_buiten*2.2 + dak_binnen*2.5 + dak_buiten*2.5
+    berekend = klein_binnen*2.0 + klein_buiten*1.5 + groot_binnen*2.5 + groot_buiten*2.0 + dak_binnen*2.5 + dak_buiten*2.5
     details = []
     if klein_binnen or klein_buiten: details.append(f"Kleine ramen: {klein_binnen} binnen, {klein_buiten} buiten")
     if groot_binnen or groot_buiten: details.append(f"Grote ramen: {groot_binnen} binnen, {groot_buiten} buiten")
@@ -254,7 +258,7 @@ elif dienst == "Oprit / Terras / Bedrijfsterrein":
     if reinigen: berekend += m2 * 3.5; opties.append("Reinigen")
     if zand: berekend += m2 * 1.0; opties.append("Zand invegen")
     if onkruid: berekend += m2 * 2.0; opties.append("Onkruidmijdend voegzand")
-    if coating: berekend += m2 * 5.0; opties.append("Coating")
+    if coating: berekend += m2 * 3.5; opties.append("Coating")
 
     if opties:
         omschrijving = f"{type_keuze}\n{m2} m² ({', '.join(opties)})"
@@ -290,14 +294,43 @@ st.write("---")
 st.write(f"**Subtotaal (excl. btw):** € {subtotaal:.2f}")
 st.write(f"**BTW (21%):** € {btw:.2f}")
 st.write(f"**Totaal (incl. btw):** € {totaal:.2f}")
+#naam adres email#
+st.write("### Klantgegevens")
+
+col1, col2 = st.columns(2)
+with col1:
+    klant_naam = st.text_input("Naam", key="klant_naam")
+    klant_email = st.text_input("E-mail", key="klant_email")
+with col2:
+    klant_adres = st.text_area("Adres", key="klant_adres", height=80)
+#-----#
 
 if st.button("Maak offerte (Excel + PDF)"):
-    if not klant.strip():
-        st.error("Voer een klantnaam in!")
+    if not klant_naam.strip():
+        st.error("Voer een naam in!")
     else:
-        excel_buf, pdf_buf, nummer = maak_pdf_en_excel(diensten_final, klant, subtotaal, btw, totaal)
+        excel_buf, pdf_buf, nummer = maak_pdf_en_excel(
+            diensten_final,
+            klant_naam,
+            klant_adres,
+            klant_email,
+            subtotaal,
+            btw,
+            totaal
+        )
+
         st.success(f"Offerte {nummer} klaar!")
 
         col1, col2 = st.columns(2)
-        col1.download_button("📊 Download Excel", excel_buf, f"Offerte_{nummer}.xlsx", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
-        col2.download_button("📄 Download PDF", pdf_buf, f"Offerte_{nummer}.pdf", "application/pdf")
+        col1.download_button(
+            "📊 Download Excel",
+            excel_buf,
+            f"Offerte_{nummer}.xlsx",
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        )
+        col2.download_button(
+            "📄 Download PDF",
+            pdf_buf,
+            f"Offerte_{nummer}.pdf",
+            "application/pdf"
+        )
