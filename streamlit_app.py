@@ -46,24 +46,28 @@ if dienst == "Ramen wassen":
 
     with c1:
         st.markdown("**Kleine ramen – Binnen**")
-        kb = st.number_input("", min_value=0, step=1, key="kb")
+        kb = st.number_input("", 0, step=1, key="kb")
+
+        st.markdown("&nbsp;")  # spacer
 
         st.markdown("**Kleine ramen – Buiten**")
-        kbui = st.number_input("", min_value=0, step=1, key="kbui")
+        kbui = st.number_input("", 0, step=1, key="kbui")
 
     with c2:
         st.markdown("**Grote ramen – Binnen**")
-        gb = st.number_input("", min_value=0, step=1, key="gb")
+        gb = st.number_input("", 0, step=1, key="gb")
+
+        st.markdown("&nbsp;")  # spacer
 
         st.markdown("**Grote ramen – Buiten**")
-        gbui = st.number_input("", min_value=0, step=1, key="gbui")
+        gbui = st.number_input("", 0, step=1, key="gbui")
 
     with c3:
         st.markdown("**Dakramen / moeilijk bereikbaar – Binnen**")
-        db = st.number_input("", min_value=0, step=1, key="db")
+        db = st.number_input("", 0, step=1, key="db")
 
         st.markdown("**Dakramen / moeilijk bereikbaar – Buiten**")
-        dbui = st.number_input("", min_value=0, step=1, key="dbui")
+        dbui = st.number_input("", 0, step=1, key="dbui")
 
 
     if st.button("Dienst toevoegen", key="ramen"):
