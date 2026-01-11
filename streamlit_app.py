@@ -259,7 +259,7 @@ st.subheader("📋 Overzicht")
 for i, d in enumerate(st.session_state.diensten):
     with st.expander(d["titel"]):
         for r in d["regels"]:
-            st.write(f"{r[0]} – € {r[2]:.2f}")
+        st.write(f"{r[0]} – € {r[2]:.2f}")
         st.write(f"**Totaal: € {d['totaal']:.2f}**")
         if st.button("❌ Verwijderen", key=f"del{i}"):
             st.session_state.diensten.pop(i)
