@@ -169,11 +169,37 @@ elif dienst == "Gevelreiniging":
     omschrijving += f"\n- {m2} m² × €5.00"
 
 elif dienst == "Oprit / Terras / Bedrijfsterrein":
-    typek = st.radio("Type", ["Oprit", "Terras", "Bedrijfsterrein"], horizontal=True)
-    m2 = st.number_input("m²", 0.1)
-    reinigen = st.checkbox("Reinigen")
-    bedrag = m2 * 3.5 if reinigen else 0
-    omschrijving = f"{typek}\n- {m2} m² reinigen × €3.50"
+    type_keuze = st.radio("Type", ["Oprit", "Terras", "Bedrijfsterrein"], horizontal=True)
+    m2 = st.number_input("Oppervlakte (m²)", min_value=0.1, format="%.1f")
+
+    col1, col2, col3, col4 = st.columns(4)
+    reinigen = col1.checkbox("Reinigen (€3,50 / m²)")
+    zand = col2.checkbox("Zand invegen (€1,00 / m²)")
+    onkruid = col3.checkbox("Onkruidmijdend voegzand (€2,00 / m²)")
+    coating = col4.checkbox("Coating (€3,50 / m²)")
+
+    bedrag = 0
+    regels = []
+
+    if reinigen:
+        bedrag += m2 * 3.5
+        regels.append(f"- Reinigen: {m2} m² × €3,50 = €{m2*3.5:.2f}")
+    if zand:
+        bedrag += m2 * 1.0
+        regels.append(f"- Zand invegen: {m2} m² × €1,00 = €{m2*1.0:.2f}")
+    if onkruid:
+        bedrag += m2 * 2.0
+        regels.append(f"- Onkruidmijdend voegzand: {m2} m² × €2,00 = €{m2*2.0:.2f}")
+    if coating:
+        bedrag += m2 * 3.5
+        regels.append(f"- Coating: {m2} m² × €3,50 = €{m2*3.5:.2f}")
+
+    if regels:
+        omschrijving = f"{type_keuze}\n" + "\n".join(regels)
+    else:
+        st.warning("Selecteer minstens één optie.")
+        bedrag = 0
+
 
 # ================= KNOPPEN =================
 col1, col2 = st.columns(2)
