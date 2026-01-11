@@ -190,7 +190,22 @@ if dienst == "Ramen wassen":
         if dbui: regels.append(("Dakramen buiten", dbui, dbui * 2.5))
 
         totaal = max(50, sum(r[2] for r in regels))
-        st.session_state.diensten.append({"titel": "Ramen wassen", "regels": regels, "totaal": totaal})
+       samenvatting = []
+if kb or kbui:
+    samenvatting.append("kleine ramen")
+if gb or gbui:
+    samenvatting.append("grote ramen")
+if db or dbui:
+    samenvatting.append("dakramen")
+
+titel = "Ramen wassen (" + ", ".join(samenvatting) + ")"
+
+st.session_state.diensten.append({
+    "titel": titel,
+    "regels": regels,
+    "totaal": totaal
+})
+
 
 # ---------------- ZONNEPANELEN ----------------
 elif dienst == "Zonnepanelen":
