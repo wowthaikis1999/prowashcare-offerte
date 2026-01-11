@@ -38,7 +38,6 @@ def maak_pdf(klant, adres, email):
 
     content = []
 
-    # ---------- HEADER ----------
     content.append(Paragraph("<b>ProWashCare</b>", styles["Title"]))
     content.append(Paragraph("Professionele reinigingsdiensten", styles["Normal"]))
     content.append(Spacer(1, 12))
@@ -55,40 +54,27 @@ def maak_pdf(klant, adres, email):
 
     content.append(Spacer(1, 20))
 
-    # ---------- DIENSTEN ----------
     for d in st.session_state.diensten:
         content.append(Paragraph(f"<b>{d['titel']}</b>", styles["Heading3"]))
 
-        table_data = []
-        for r in d["regels"]:
-            table_data.append([
-                f"– {r[0]}",
-                f"€ {r[2]:.2f}"
-            ])
+        rows = []
+        for omschrijving, aantal, prijs in d["regels"]:
+            rows.append([f"– {omschrijving}", f"€ {prijs:.2f}"])
 
-        table_data.append([
-            "<b>Subtotaal</b>",
-            f"<b>€ {d['totaal']:.2f}</b>"
-        ])
+        rows.append(["<b>Subtotaal</b>", f"<b>€ {d['totaal']:.2f}</b>"])
 
-        content.append(Table(
-            table_data,
-            colWidths=[350, 100],
-            hAlign="LEFT"
-        ))
+        content.append(Table(rows, colWidths=[350, 100]))
         content.append(Spacer(1, 14))
 
-    # ---------- TOTALEN ----------
     subtotaal, btw, totaal = bereken_totalen()
 
-    totalen = [
+    totals = [
         ["Subtotaal", f"€ {subtotaal:.2f}"],
         ["BTW 21%", f"€ {btw:.2f}"],
-        ["Totaal", f"€ {totaal:.2f}"]
+        ["Totaal", f"€ {totaal:.2f}"],
     ]
 
-    content.append(Spacer(1, 12))
-    content.append(Table(totalen, colWidths=[350, 100]))
+    content.append(Table(totals, colWidths=[350, 100]))
 
     doc.build(content)
     buffer.seek(0)
@@ -105,9 +91,10 @@ def maak_excel(klant):
     ws.append([])
 
     ws.append(["Omschrijving", "Bedrag (€)"])
+
     for d in st.session_state.diensten:
-        for r in d["regels"]:
-            ws.append([r[0], r[2]])
+        for omschrijving, aantal, prijs in d["regels"]:
+            ws.append([omschrijving, prijs])
         ws.append([f"Totaal {d['titel']}", d["totaal"]])
 
     subtotaal, btw, totaal = bereken_totalen()
@@ -208,7 +195,11 @@ elif dienst == "Oprit / Terras / Bedrijfsterrein":
         if coating: regels.append(("Coating", m2, m2 * 3.5))
 
         if regels:
-            st.session_state.diensten.append({"titel": type_k, "regels": regels, "totaal": sum(r[2] for r in regels)})
+            st.session_state.diensten.append({
+                "titel": type_k,
+                "regels": regels,
+                "totaal": sum(r[2] for r in regels)
+            })
 
 # ---------------- VERVOERSKOSTEN ----------------
 st.divider()
@@ -225,8 +216,8 @@ st.subheader("📋 Overzicht")
 
 for i, d in enumerate(st.session_state.diensten):
     with st.expander(d["titel"], expanded=False):
-        for r in d["regels"]:
-            st.write(f"{r[0]} – € {r[2]:.2f}")
+        for omschrijving, aantal, prijs in d["regels"]:
+            st.write(f"{omschrijving} – € {prijs:.2f}")
         st.write(f"**Totaal: € {d['totaal']:.2f}**")
         if st.button("❌ Verwijderen", key=f"del{i}"):
             st.session_state.diensten.pop(i)
