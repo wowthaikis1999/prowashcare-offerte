@@ -170,7 +170,17 @@ st.write(f"## Totaal: € {tot:.2f}")
 st.divider()
 if klant_naam:
     c1, c2 = st.columns(2)
-    c1.download_button("📄 Maak PDF offerte", maak_pdf(klant_naam, klant_adres, klant_email), "offerte.pdf")
-    c2.download_button("📊 Maak Excel offerte", maak_excel:=None)
+    c1.download_button(
+    "📄 Maak PDF offerte",
+    maak_pdf(klant_naam, klant_adres, klant_email),
+    "offerte.pdf"
+)
+
+c2.download_button(
+    "📊 Maak Excel offerte",
+    maak_excel(klant_naam),
+    "offerte.xlsx"
+)
+
 else:
     st.info("Vul eerst klantgegevens in")
