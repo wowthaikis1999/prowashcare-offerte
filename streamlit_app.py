@@ -42,7 +42,6 @@ dienst = st.selectbox(
 if dienst == "Ramen wassen":
     st.subheader("Ramen wassen")
 
-    # BINNEN
     st.markdown("**Binnen**")
     b1, b2, b3 = st.columns(3)
 
@@ -60,7 +59,6 @@ if dienst == "Ramen wassen":
 
     st.markdown("---")
 
-    # BUITEN
     st.markdown("**Buiten**")
     b4, b5, b6 = st.columns(3)
 
@@ -82,8 +80,8 @@ if dienst == "Ramen wassen":
         if kbui: regels.append(("Kleine ramen buiten", kbui, kbui * 1.5))
         if gb: regels.append(("Grote ramen binnen", gb, gb * 2.5))
         if gbui: regels.append(("Grote ramen buiten", gbui, gbui * 2.0))
-        if db: regels.append(("Dakramen / moeilijk bereikbaar binnen", db, db * 2.5))
-        if dbui: regels.append(("Dakramen / moeilijk bereikbaar buiten", dbui, dbui * 2.5))
+        if db: regels.append(("Dakramen binnen", db, db * 2.5))
+        if dbui: regels.append(("Dakramen buiten", dbui, dbui * 2.5))
 
         totaal = max(50, sum(r[2] for r in regels))
 
@@ -96,6 +94,8 @@ if dienst == "Ramen wassen":
 
 # ================= ZONNEPANELEN =================
 elif dienst == "Zonnepanelen":
+    st.subheader("Zonnepanelen")
+
     aantal = st.number_input("Aantal zonnepanelen", 1, step=1)
 
     if st.button("Dienst toevoegen", key="panelen"):
@@ -111,8 +111,10 @@ elif dienst == "Zonnepanelen":
 
 # ================= GEVEL =================
 elif dienst == "Gevelreiniging":
+    st.subheader("Gevelreiniging")
+
     m2 = st.number_input("Oppervlakte (m²)", 0.1, step=0.1)
-    impregneren = st.checkbox("Impregneren (+ €4/m²)")
+    impregneren = st.checkbox("Impregneren")
 
     if st.button("Dienst toevoegen", key="gevel"):
         regels = [("Gevel reinigen", m2, m2 * 5)]
@@ -130,6 +132,8 @@ elif dienst == "Gevelreiniging":
 
 # ================= OPRIT / TERRAS =================
 elif dienst == "Oprit / Terras / Bedrijfsterrein":
+    st.subheader("Oprit / Terras / Bedrijfsterrein")
+
     type_keuze = st.radio("Type", ["Oprit", "Terras", "Bedrijfsterrein"], horizontal=True)
     m2 = st.number_input("Oppervlakte (m²)", 0.1, step=0.1)
 
