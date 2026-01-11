@@ -171,25 +171,32 @@ if dienst == "Ramen wassen":
     dbui = c6.number_input("Dakramen-Moeilijk bereikbare ", 0, step=1)
 
     if st.button("Dienst toevoegen"):
-        regels = []
+    regels = []
 
-    if kb: regels.append(("Kleine ramen binnen", kb, kb * 2))
-    if kbui: regels.append(("Kleine ramen buiten", kbui, kbui * 1.5))
-    if gb: regels.append(("Grote ramen binnen", gb, gb * 2.5))
-    if gbui: regels.append(("Grote ramen buiten", gbui, gbui * 2))
-    if db: regels.append(("Dakramen binnen-Moeilijk bereikbare", db, db * 2.5))
-    if dbui: regels.append(("Dakramen buiten-Moeilijk bereikbare", dbui, dbui * 2.5))
+    if kb: 
+        regels.append(("Kleine ramen binnen", kb, kb * 2))
+    if kbui: 
+        regels.append(("Kleine ramen buiten", kbui, kbui * 1.5))
+    if gb: 
+        regels.append(("Grote ramen binnen", gb, gb * 2.5))
+    if gbui: 
+        regels.append(("Grote ramen buiten", gbui, gbui * 2))
+    if db: 
+        regels.append(("Dakramen binnen-Moeilijk bereikbare", db, db * 2.5))
+    if dbui: 
+        regels.append(("Dakramen buiten-Moeilijk bereikbare", dbui, dbui * 2.5))
 
-    # Voeg vervoerskosten toe als dit de eerste dienst is
-    # Controleer of regels niet leeg is voordat je de som maakt
+    # Bereken het totaal van de diensten
     totaal_diensten = sum(r[2] for r in regels) if regels else 0
-    totaal = max(50, totaal_diensten)  # Minimumprijs wordt nog steeds toegepast voor de ramen wassen zonder vervoerskosten
+    
+    # Minimumprijs voor ramen wassen, wordt alleen toegepast als het totaal lager is dan 50
+    totaal = max(50, totaal_diensten)
 
-    # Voeg vervoerskosten alleen toe als het totaal > 50 is (niet in mindering brengen)
-    if len(st.session_state.diensten) > 0 and totaal_diensten + VERVOERSKOSTEN > 50:
-        totaal += VERVOERSKOSTEN  # Voeg vervoerskosten toe bij een totaal van 50+.
+    # Voeg vervoerskosten alleen toe als het totaal van de diensten groter is dan 50
+    if totaal_diensten > 0 and totaal_diensten + VERVOERSKOSTEN > 50:
+        totaal += VERVOERSKOSTEN
 
-    # Bepaal samenvatting
+    # Samenvatting van de geselecteerde ramen
     samenvatting = []
     if kb or kbui: samenvatting.append("kleine ramen")
     if gb or gbui: samenvatting.append("grote ramen")
@@ -199,23 +206,13 @@ if dienst == "Ramen wassen":
     if samenvatting:
         titel += " (" + ", ".join(samenvatting) + ")"
 
+    # Voeg de dienst toe aan de session state
     st.session_state.diensten.append({
         "titel": titel,
         "regels": regels,
         "totaal": totaal
     })
 
-
-# ---------------- ZONNEPANELEN ----------------
-elif dienst == "Zonnepanelen":
-    aantal = st.number_input("Aantal zonnepanelen", 1, step=1)
-    if st.button("Dienst toevoegen"):
-        totaal = max(79, aantal * 5)
-        st.session_state.diensten.append({
-            "titel": "Zonnepanelen",
-            "regels": [("Zonnepanelen reinigen", aantal, aantal * 5)],
-            "totaal": totaal
-        })
 
 # ---------------- GEVEL ----------------
 elif dienst == "Gevelreiniging":
