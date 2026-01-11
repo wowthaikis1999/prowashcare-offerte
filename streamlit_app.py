@@ -9,10 +9,10 @@ from datetime import datetime
 import io
 import os
 
+# ---------------- CONFIG ----------------
 st.set_page_config(page_title="ProWashCare Offerte", layout="centered")
 st.title("🧼 ProWashCare – Offerte Tool")
 
-# ---------------- BEDRIJF ----------------
 BEDRIJFSNAAM = "ProWashCare"
 ADRES = "2930 Brasschaat, Antwerpen"
 TELEFOON = "+32 470 87 43 39"
@@ -20,48 +20,53 @@ EMAIL = "dennisg@prowashcare.com"
 WEBSITE = "www.prowashcare.com"
 
 VERVOERSKOSTEN = 8.0
-OPRIT_MINIMUM = 299.0
 
-# ---------------- SESSION ----------------
+# ---------------- SESSION STATE ----------------
 if "diensten" not in st.session_state:
     st.session_state.diensten = []
     st.session_state.vervoer_toegevoegd = False
 
-# ================= FUNCTIES =================
+# ---------------- FUNCTIES ----------------
 def bereken_totaal():
-    diensten_clean = st.session_state.diensten.copy()
+    diensten_clean = []
+    for d in st.session_state.diensten:
+        if isinstance(d, tuple) and len(d) == 2 and isinstance(d[1], (int, float)):
+            diensten_clean.append(d)
+
     subtotaal = sum(d[1] for d in diensten_clean)
     btw = subtotaal * 0.21
     totaal = subtotaal + btw
     return diensten_clean, subtotaal, btw, totaal
 
 
-def maak_pdf_en_excel(diensten_final, klant_naam, klant_adres, klant_email, subtotaal, btw, totaal):
+def maak_pdf_en_excel(diensten, klant_naam, klant_adres, klant_email, subtotaal, btw, totaal):
     nu = datetime.now()
     nummer = nu.strftime("PWC%Y%m%d%H%M")
-    datum_str = nu.strftime('%d-%m-%Y')
+    datum = nu.strftime("%d-%m-%Y")
 
     # -------- EXCEL --------
     wb = Workbook()
     ws = wb.active
     ws.title = "Offerte"
 
+    bold = Font(bold=True)
     ws["A1"] = "ProWashCare – OFFERTE"
     ws["A1"].font = Font(bold=True, size=16)
     ws.merge_cells("A1:B1")
 
     ws["A3"] = f"Klant: {klant_naam}"
     ws["A4"] = f"Offertenummer: {nummer}"
-    ws["A5"] = f"Datum: {datum_str}"
+    ws["A5"] = f"Datum: {datum}"
+    ws["A3"].font = ws["A4"].font = ws["A5"].font = bold
 
     ws["A7"] = "Omschrijving"
     ws["B7"] = "Bedrag (€)"
-    ws["A7"].font = ws["B7"].font = Font(bold=True)
+    ws["A7"].font = ws["B7"].font = bold
 
     row = 8
-    for oms, bed in diensten_final:
+    for oms, prijs in diensten:
         ws[f"A{row}"] = oms
-        ws[f"B{row}"] = bed
+        ws[f"B{row}"] = prijs
         ws[f"B{row}"].number_format = '€#,##0.00'
         row += 1
 
@@ -84,40 +89,46 @@ def maak_pdf_en_excel(diensten_final, klant_naam, klant_adres, klant_email, subt
     styles = getSampleStyleSheet()
     content = []
 
-    content.append(Paragraph("<b>ProWashCare – Offerte</b>", styles["Title"]))
+    if os.path.exists("logo.png"):
+        img = utils.ImageReader("logo.png")
+        iw, ih = img.getSize()
+        logo = Image("logo.png", width=4*cm, height=(4*cm*ih/iw))
+        content.append(logo)
+
+    content.append(Paragraph("<b>Offerte</b>", styles["Title"]))
     content.append(Spacer(1, 12))
-    content.append(Paragraph(f"Klant: {klant_naam}", styles["Normal"]))
-    content.append(Paragraph(f"Adres: {klant_adres}", styles["Normal"]))
-    content.append(Paragraph(f"E-mail: {klant_email}", styles["Normal"]))
+
+    content.append(Paragraph(f"<b>Klant:</b> {klant_naam}", styles["Normal"]))
+    content.append(Paragraph(f"<b>Adres:</b> {klant_adres.replace(chr(10), '<br/>')}", styles["Normal"]))
+    content.append(Paragraph(f"<b>E-mail:</b> {klant_email}", styles["Normal"]))
     content.append(Paragraph(f"Offertenummer: {nummer}", styles["Normal"]))
-    content.append(Paragraph(f"Datum: {datum_str}", styles["Normal"]))
-    content.append(Spacer(1, 20))
+    content.append(Paragraph(f"Datum: {datum}", styles["Normal"]))
+    content.append(Spacer(1, 12))
 
-    table_data = [["Omschrijving", "Bedrag (€)"]]
-    for oms, bed in diensten_final:
-        table_data.append([oms, f"€ {bed:.2f}"])
+    data = [["Omschrijving", "Bedrag"]]
+    for oms, prijs in diensten:
+        data.append([Paragraph(oms.replace("\n", "<br/>"), styles["Normal"]), f"€ {prijs:.2f}"])
 
-    table_data += [
+    data += [
         ["", ""],
         ["Subtotaal", f"€ {subtotaal:.2f}"],
         ["BTW 21%", f"€ {btw:.2f}"],
-        ["Totaal", f"€ {totaal:.2f}"],
+        ["Totaal", f"€ {totaal:.2f}"]
     ]
 
-    content.append(RLTable(table_data, colWidths=[350, 100]))
+    content.append(RLTable(data, colWidths=[350, 100]))
     pdf.build(content)
     pdf_buffer.seek(0)
 
     return excel_buffer, pdf_buffer, nummer
 
-# ================= UI =================
+# ---------------- UI ----------------
+st.subheader("👤 Klantgegevens")
 klant_naam = st.text_input("Naam")
 klant_email = st.text_input("E-mail")
-klant_adres = st.text_area("Adres")
+klant_adres = st.text_area("Adres", height=80)
 
 st.divider()
-
-st.write("### Diensten")
 dienst = st.selectbox("Dienst", [
     "Ramen wassen", "Zonnepanelen", "Gevelreiniging", "Oprit / Terras / Bedrijfsterrein"
 ])
@@ -126,9 +137,9 @@ bedrag = 0
 omschrijving = dienst
 
 if dienst == "Zonnepanelen":
-    aantal = st.number_input("Aantal zonnepanelen", min_value=1, step=1)
+    aantal = st.number_input("Aantal panelen", 1, step=1)
     bedrag = max(79, aantal * 5)
-    omschrijving += f" ({aantal} panelen)"
+    omschrijving += f"\n({aantal} panelen)"
 
 if st.button("Dienst toevoegen") and bedrag > 0:
     if not st.session_state.vervoer_toegevoegd:
@@ -138,46 +149,21 @@ if st.button("Dienst toevoegen") and bedrag > 0:
     st.rerun()
 
 st.divider()
-st.write("### Overzicht")
+st.subheader("📋 Overzicht")
 
 diensten_final, subtotaal, btw, totaal = bereken_totaal()
-for oms, bed in diensten_final:
-    st.write(f"{oms} — € {bed:.2f}")
 
-st.write(f"**Totaal:** € {totaal:.2f}")
+for oms, prijs in diensten_final:
+    st.write(f"{oms} — € {prijs:.2f}")
 
-# ================= DOWNLOAD KNOPPEN =================
-st.divider()
-st.write("### Offerte downloaden")
+st.write(f"**Subtotaal:** € {subtotaal:.2f}")
+st.write(f"**BTW:** € {btw:.2f}")
+st.write(f"## **Totaal:** € {totaal:.2f}")
 
-col1, col2 = st.columns(2)
+if st.button("📄 Maak offerte"):
+    excel, pdf, nr = maak_pdf_en_excel(
+        diensten_final, klant_naam, klant_adres, klant_email, subtotaal, btw, totaal
+    )
 
-with col1:
-    if st.button("📄 Maak & download PDF"):
-        if klant_naam.strip():
-            excel_buf, pdf_buf, nummer = maak_pdf_en_excel(
-                diensten_final, klant_naam, klant_adres, klant_email, subtotaal, btw, totaal
-            )
-            st.download_button(
-                "⬇️ Download PDF",
-                pdf_buf,
-                f"Offerte_{nummer}.pdf",
-                "application/pdf"
-            )
-        else:
-            st.error("Naam ontbreekt")
-
-with col2:
-    if st.button("📊 Maak & download Excel"):
-        if klant_naam.strip():
-            excel_buf, pdf_buf, nummer = maak_pdf_en_excel(
-                diensten_final, klant_naam, klant_adres, klant_email, subtotaal, btw, totaal
-            )
-            st.download_button(
-                "⬇️ Download Excel",
-                excel_buf,
-                f"Offerte_{nummer}.xlsx",
-                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-            )
-        else:
-            st.error("Naam ontbreekt")
+    st.download_button("📊 Download Excel", excel, f"Offerte_{nr}.xlsx")
+    st.download_button("📄 Download PDF", pdf, f"Offerte_{nr}.pdf")
