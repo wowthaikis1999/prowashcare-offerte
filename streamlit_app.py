@@ -47,7 +47,6 @@ def maak_pdf(klant, adres, email):
     nummer = datetime.now().strftime("PWC%Y%m%d%H%M")
     datum = datetime.now().strftime("%d-%m-%Y")
 
-    # ---------- HEADER ----------
     left = [
         Paragraph("<b>ProWashCare – Offerte</b>", styles["Title"]),
         Spacer(1, 6),
@@ -75,54 +74,39 @@ def maak_pdf(klant, adres, email):
     content.append(header)
     content.append(Spacer(1, 20))
 
-    # ---------- TABEL ----------
     data = [["Omschrijving", "Aantal", "Bedrag (€)"]]
 
     for d in st.session_state.diensten:
-        # Titelregel van dienst
-        data.append([
-            Paragraph(f"<b>{d['titel']}</b>", styles["Normal"]),
-            "",
-            ""
-        ])
-
+        content.append([Paragraph(f"<b>{d['titel']}</b>", styles["Normal"]), "", ""])
         for r in d["regels"]:
-            omschrijving, aantal, prijs = r
-            data.append([
-                f"– {omschrijving}",
-                f"{aantal}x",
-                f"{prijs:.2f}"
-            ])
-
-        data.append([
-            Paragraph("<b>Subtotaal</b>", styles["Normal"]),
-            "",
-            Paragraph(f"<b>{d['totaal']:.2f}</b>", styles["Normal"])
-        ])
-
+            omschrijving = r[0]
+            aantal = r[1]
+            prijs = r[2]
+            # Voeg aantal en prijs toe aan de tabel
+            data.append([f"– {omschrijving}", f"{aantal}x", f"€ {prijs:.2f}"])
+        data.append(["Subtotaal", "", f"€ {d['totaal']:.2f}"])
         data.append(["", "", ""])
 
     subtotaal, btw, totaal = bereken_totalen()
 
-    data.append(["Subtotaal (excl. btw)", "", f"{subtotaal:.2f}"])
-    data.append(["BTW 21%", "", f"{btw:.2f}"])
+    data.append(["Subtotaal (excl. btw)", "", f"€ {subtotaal:.2f}"])
+    data.append(["BTW 21%", "", f"€ {btw:.2f}"])
     data.append([
         Paragraph("<b>Totaal (incl. btw)</b>", styles["Normal"]),
         "",
         Paragraph(f"<b>{totaal:.2f}</b>", styles["Normal"]),
     ])
 
-    table = Table(data, colWidths=[9 * cm, 3 * cm, 3 * cm])
+    table = Table(data, colWidths=[12 * cm, 3 * cm, 3 * cm])  # Pas de kolombreedtes aan
     table.setStyle([
         ("GRID", (0, 0), (-1, -1), 0.25, "grey"),
         ("BACKGROUND", (0, 0), (-1, 0), "#EEEEEE"),
         ("ALIGN", (1, 1), (-1, -1), "RIGHT"),
-        ("VALIGN", (0, 0), (-1, -1), "TOP"),
     ])
 
     content.append(table)
-
     doc.build(content)
+
     buffer.seek(0)
     return buffer
 
@@ -187,31 +171,39 @@ if dienst == "Ramen wassen":
     dbui = c6.number_input("Dakramen-Moeilijk bereikbare ", 0, step=1)
 
     if st.button("Dienst toevoegen"):
-        regels = []
+    regels = []
 
-        if kb: regels.append(("Kleine ramen binnen", kb, kb * 2))
-        if kbui: regels.append(("Kleine ramen buiten", kbui, kbui * 1.5))
-        if gb: regels.append(("Grote ramen binnen", gb, gb * 2.5))
-        if gbui: regels.append(("Grote ramen buiten", gbui, gbui * 2))
-        if db: regels.append(("Dakramen binnen-Moeilijk bereikbare", db, db * 2.5))
-        if dbui: regels.append(("Dakramen buiten-Moeilijk bereikbare", dbui, dbui * 2.5))
+    if kb: regels.append(("Kleine ramen binnen", kb, kb * 2))
+    if kbui: regels.append(("Kleine ramen buiten", kbui, kbui * 1.5))
+    if gb: regels.append(("Grote ramen binnen", gb, gb * 2.5))
+    if gbui: regels.append(("Grote ramen buiten", gbui, gbui * 2))
+    if db: regels.append(("Dakramen binnen-Moeilijk bereikbare", db, db * 2.5))
+    if dbui: regels.append(("Dakramen buiten-Moeilijk bereikbare", dbui, dbui * 2.5))
 
-        totaal = max(50, sum(r[2] for r in regels))
+    # Voeg vervoerskosten toe als dit de eerste dienst is
+    totaal_diensten = sum(r[2] for r in regels)
+    totaal = max(50, totaal_diensten)  # Minimumprijs wordt nog steeds toegepast voor de ramen wassen zonder vervoerskosten
 
-        samenvatting = []
-        if kb or kbui: samenvatting.append("kleine ramen")
-        if gb or gbui: samenvatting.append("grote ramen")
-        if db or dbui: samenvatting.append("dakramen")
+    # Voeg vervoerskosten alleen toe als het totaal > 50 is (niet in mindering brengen)
+    if len(st.session_state.diensten) > 0 and totaal_diensten + VERVOERSKOSTEN > 50:
+        totaal += VERVOERSKOSTEN  # Voeg vervoerskosten toe bij een totaal van 50+.
 
-        titel = "Ramen wassen"
-        if samenvatting:
-            titel += " (" + ", ".join(samenvatting) + ")"
+    # Bepaal samenvatting
+    samenvatting = []
+    if kb or kbui: samenvatting.append("kleine ramen")
+    if gb or gbui: samenvatting.append("grote ramen")
+    if db or dbui: samenvatting.append("dakramen")
 
-        st.session_state.diensten.append({
-            "titel": titel,
-            "regels": regels,
-            "totaal": totaal
-        })
+    titel = "Ramen wassen"
+    if samenvatting:
+        titel += " (" + ", ".join(samenvatting) + ")"
+
+    st.session_state.diensten.append({
+        "titel": titel,
+        "regels": regels,
+        "totaal": totaal
+    })
+
 
 # ---------------- ZONNEPANELEN ----------------
 elif dienst == "Zonnepanelen":
