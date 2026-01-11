@@ -187,20 +187,20 @@ if dienst == "Ramen wassen":
         regels.append(("Dakramen buiten-Moeilijk bereikbare", dbui, dbui * 2.5))
 
     # Bereken het totaal van de diensten
-    totaal_diensten = sum(r[2] for r in regels) if regels else 0
-    
+    totaal_diensten = sum(r[2] for r in regels)  # Totaal van de prijzen uit de 'regels' lijst
+
     # Minimumprijs voor ramen wassen, wordt alleen toegepast als het totaal lager is dan 50
-    totaal = max(50, totaal_diensten)
+    totaal = max(50, totaal_diensten)  # Minimumprijs wordt toegepast als het totaal lager is dan 50
 
     # Voeg vervoerskosten alleen toe als het totaal van de diensten groter is dan 50
-    if totaal_diensten > 0 and totaal_diensten + VERVOERSKOSTEN > 50:
-        totaal += VERVOERSKOSTEN
+    if totaal_diensten > 0 and totaal + VERVOERSKOSTEN > 50:
+        totaal += VERVOERSKOSTEN  # Voeg vervoerskosten toe als het totaal > 50
 
     # Samenvatting van de geselecteerde ramen
     samenvatting = []
-    if kb or kbui: samenvatting.append("kleine ramen")
-    if gb or gbui: samenvatting.append("grote ramen")
-    if db or dbui: samenvatting.append("dakramen")
+    if kb or kbui: samenvatting.append(f"{kb + kbui} kleine ramen")
+    if gb or gbui: samenvatting.append(f"{gb + gbui} grote ramen")
+    if db or dbui: samenvatting.append(f"{db + dbui} dakramen")
 
     titel = "Ramen wassen"
     if samenvatting:
@@ -212,6 +212,7 @@ if dienst == "Ramen wassen":
         "regels": regels,
         "totaal": totaal
     })
+
 
 
 # ---------------- GEVEL ----------------
