@@ -38,43 +38,43 @@ dienst = st.selectbox(
     ["Ramen wassen", "Zonnepanelen", "Gevelreiniging", "Oprit / Terras / Bedrijfsterrein"]
 )
 
-# ---------------- RAMEN WASSEN ----------------
-st.subheader("Ramen wassen")
+# ================= RAMEN WASSEN =================
+if dienst == "Ramen wassen":
+    st.subheader("Ramen wassen")
 
-# BINNEN
-st.markdown("**Binnen**")
-b1, b2, b3 = st.columns(3)
+    # BINNEN
+    st.markdown("**Binnen**")
+    b1, b2, b3 = st.columns(3)
 
-with b1:
-    st.markdown("Kleine ramen")
-    kb = st.number_input("", 0, step=1, key="kb")
+    with b1:
+        st.markdown("Kleine ramen")
+        kb = st.number_input("", 0, step=1, key="kb")
 
-with b2:
-    st.markdown("Grote ramen")
-    gb = st.number_input("", 0, step=1, key="gb")
+    with b2:
+        st.markdown("Grote ramen")
+        gb = st.number_input("", 0, step=1, key="gb")
 
-with b3:
-    st.markdown("Dakramen / moeilijk bereikbaar")
-    db = st.number_input("", 0, step=1, key="db")
+    with b3:
+        st.markdown("Dakramen / moeilijk bereikbaar")
+        db = st.number_input("", 0, step=1, key="db")
 
+    st.markdown("---")
 
-st.markdown("---")
+    # BUITEN
+    st.markdown("**Buiten**")
+    b4, b5, b6 = st.columns(3)
 
-# BUITEN
-st.markdown("**Buiten**")
-b4, b5, b6 = st.columns(3)
+    with b4:
+        st.markdown("Kleine ramen")
+        kbui = st.number_input("", 0, step=1, key="kbui")
 
-with b4:
-    st.markdown("Kleine ramen")
-    kbui = st.number_input("", 0, step=1, key="kbui")
+    with b5:
+        st.markdown("Grote ramen")
+        gbui = st.number_input("", 0, step=1, key="gbui")
 
-with b5:
-    st.markdown("Grote ramen")
-    gbui = st.number_input("", 0, step=1, key="gbui")
-
-with b6:
-    st.markdown("Dakramen / moeilijk bereikbaar")
-    dbui = st.number_input("", 0, step=1, key="dbui")
+    with b6:
+        st.markdown("Dakramen / moeilijk bereikbaar")
+        dbui = st.number_input("", 0, step=1, key="dbui")
 
     if st.button("Dienst toevoegen", key="ramen"):
         regels = []
@@ -94,7 +94,7 @@ with b6:
         })
         st.success("Ramen wassen toegevoegd")
 
-# ---------------- ZONNEPANELEN ----------------
+# ================= ZONNEPANELEN =================
 elif dienst == "Zonnepanelen":
     aantal = st.number_input("Aantal zonnepanelen", 1, step=1)
 
@@ -109,7 +109,7 @@ elif dienst == "Zonnepanelen":
         })
         st.success("Zonnepanelen toegevoegd")
 
-# ---------------- GEVEL ----------------
+# ================= GEVEL =================
 elif dienst == "Gevelreiniging":
     m2 = st.number_input("Oppervlakte (m²)", 0.1, step=0.1)
     impregneren = st.checkbox("Impregneren (+ €4/m²)")
@@ -128,7 +128,7 @@ elif dienst == "Gevelreiniging":
         })
         st.success("Gevelreiniging toegevoegd")
 
-# ---------------- OPRIT / TERRAS ----------------
+# ================= OPRIT / TERRAS =================
 elif dienst == "Oprit / Terras / Bedrijfsterrein":
     type_keuze = st.radio("Type", ["Oprit", "Terras", "Bedrijfsterrein"], horizontal=True)
     m2 = st.number_input("Oppervlakte (m²)", 0.1, step=0.1)
