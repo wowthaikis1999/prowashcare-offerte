@@ -40,18 +40,31 @@ dienst = st.selectbox(
 
 # ---------------- RAMEN WASSEN ----------------
 if dienst == "Ramen wassen":
-    st.markdown("### Ramen wassen")
+    st.subheader("Ramen wassen")
 
     c1, c2, c3 = st.columns(3)
+
     with c1:
-        kb = st.number_input("Kleine ramen – Binnen\n", 0, step=1)
-        kbui = st.number_input("Kleine ramen – Buiten\n", 0, step=1)
+        st.markdown("**Kleine ramen – Binnen**")
+        kb = st.number_input("", min_value=0, step=1, key="kb")
+
+        st.markdown("**Kleine ramen – Buiten**")
+        kbui = st.number_input("", min_value=0, step=1, key="kbui")
+
     with c2:
-        gb = st.number_input("Grote ramen – Binnen\n", 0, step=1)
-        gbui = st.number_input("Grote ramen – Buiten\n", 0, step=1)
+        st.markdown("**Grote ramen – Binnen**")
+        gb = st.number_input("", min_value=0, step=1, key="gb")
+
+        st.markdown("**Grote ramen – Buiten**")
+        gbui = st.number_input("", min_value=0, step=1, key="gbui")
+
     with c3:
-        db = st.number_input("Dakramen / moeilijk bereikbaar – Binnen", 0, step=1)
-        dbui = st.number_input("Dakramen / moeilijk bereikbaar – Buiten", 0, step=1)
+        st.markdown("**Dakramen / moeilijk bereikbaar – Binnen**")
+        db = st.number_input("", min_value=0, step=1, key="db")
+
+        st.markdown("**Dakramen / moeilijk bereikbaar – Buiten**")
+        dbui = st.number_input("", min_value=0, step=1, key="dbui")
+
 
     if st.button("Dienst toevoegen", key="ramen"):
         regels = []
