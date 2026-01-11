@@ -171,7 +171,7 @@ if dienst == "Ramen wassen":
     dbui = c6.number_input("Dakramen-Moeilijk bereikbare ", 0, step=1)
 
     if st.button("Dienst toevoegen"):
-    regels = []
+        regels = []
 
     # Controleer of het aantal ramen groter is dan 0 voor elke input
     if kb > 0: 
