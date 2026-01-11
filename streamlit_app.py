@@ -26,7 +26,6 @@ def bereken_totalen():
     totaal = subtotaal + btw
     return subtotaal, btw, totaal
 
-
 def maak_pdf(klant, adres, email):
     buffer = io.BytesIO()
 
@@ -110,7 +109,6 @@ def maak_pdf(klant, adres, email):
     buffer.seek(0)
     return buffer
 
-
 def maak_excel(klant):
     wb = Workbook()
     ws = wb.active
@@ -191,11 +189,11 @@ if dienst == "Ramen wassen":
         if regels:  # Als de lijst 'regels' niet leeg is, ga verder
             totaal_diensten = sum(r[2] for r in regels)  # Som van de prijzen uit de 'regels' lijst
             
-            # Pas de minimumprijs toe voor de ramen wassen
+            # Pas de minimumprijs toe voor de ramen wassen (alleen als de prijs onder 50 euro is)
             totaal = max(50, totaal_diensten)  # Minimumprijs wordt nog steeds toegepast voor de ramen wassen
 
-            # Voeg vervoerskosten toe als de gebruiker expliciet op de knop heeft geklikt
-            if "Vervoerskosten" in [d['titel'] for d in st.session_state.diensten]:
+            # Voeg vervoerskosten toe als de som van de diensten en vervoerskosten > 50 euro
+            if totaal + VERVOERSKOSTEN > 50:
                 totaal += VERVOERSKOSTEN  # Voeg de vervoerskosten toe bij een totaal van 50+
 
             # Maak een samenvatting van de gekozen ramen
