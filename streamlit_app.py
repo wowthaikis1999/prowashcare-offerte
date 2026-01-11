@@ -26,6 +26,7 @@ def bereken_totalen():
     totaal = subtotaal + btw
     return subtotaal, btw, totaal
 
+
 def maak_pdf(klant, adres, email):
     buffer = io.BytesIO()
 
@@ -81,6 +82,7 @@ def maak_pdf(klant, adres, email):
             omschrijving = r[0]
             aantal = r[1]
             prijs = r[2]
+            # Voeg aantal en prijs toe aan de tabel
             data.append([f"– {omschrijving}", f"{aantal}x", f"€ {prijs:.2f}"])
         data.append(["Subtotaal", "", f"€ {d['totaal']:.2f}"])
         data.append(["", "", ""])
@@ -169,37 +171,52 @@ if dienst == "Ramen wassen":
     dbui = c6.number_input("Dakramen-Moeilijk bereikbare ", 0, step=1)
 
     if st.button("Dienst toevoegen"):
-        regels = []
+        regels = []  # Lijst om de regels op te slaan.
 
-        if kb > 0: regels.append(("Kleine ramen binnen", kb, kb * 2))
-        if kbui > 0: regels.append(("Kleine ramen buiten", kbui, kbui * 1.5))
-        if gb > 0: regels.append(("Grote ramen binnen", gb, gb * 2.5))
-        if gbui > 0: regels.append(("Grote ramen buiten", gbui, gbui * 2))
-        if db > 0: regels.append(("Dakramen binnen-Moeilijk bereikbare", db, db * 2.5))
-        if dbui > 0: regels.append(("Dakramen buiten-Moeilijk bereikbare", dbui, dbui * 2.5))
+        # Controleer of het aantal ramen groter is dan 0 voor elke input en voeg deze toe aan de lijst
+        if kb > 0: 
+            regels.append(("Kleine ramen binnen", kb, kb * 2))
+        if kbui > 0: 
+            regels.append(("Kleine ramen buiten", kbui, kbui * 1.5))
+        if gb > 0: 
+            regels.append(("Grote ramen binnen", gb, gb * 2.5))
+        if gbui > 0: 
+            regels.append(("Grote ramen buiten", gbui, gbui * 2))
+        if db > 0: 
+            regels.append(("Dakramen binnen-Moeilijk bereikbare", db, db * 2.5))
+        if dbui > 0: 
+            regels.append(("Dakramen buiten-Moeilijk bereikbare", dbui, dbui * 2.5))
 
-        totaal_diensten = sum(r[2] for r in regels)  # Totaal van de prijzen uit de 'regels' lijst
-        totaal = max(50, totaal_diensten)  # Minimumprijs wordt nog steeds toegepast voor de ramen wassen
+        # Controleer of de lijst 'regels' daadwerkelijk items bevat
+        if regels:  # Als de lijst 'regels' niet leeg is, ga verder
+            totaal_diensten = sum(r[2] for r in regels)  # Som van de prijzen uit de 'regels' lijst
+            
+            # Pas de minimumprijs toe voor de ramen wassen
+            totaal = max(50, totaal_diensten)  # Minimumprijs wordt nog steeds toegepast voor de ramen wassen
 
-        # Voeg vervoerskosten alleen toe als de gebruiker expliciet op de knop heeft geklikt
-        if "Vervoerskosten" in st.session_state.diensten:
-            totaal += VERVOERSKOSTEN  # Voeg de vervoerskosten toe als deze in de lijst met diensten staat
+            # Voeg vervoerskosten toe als de gebruiker expliciet op de knop heeft geklikt
+            if "Vervoerskosten" in [d['titel'] for d in st.session_state.diensten]:
+                totaal += VERVOERSKOSTEN  # Voeg de vervoerskosten toe bij een totaal van 50+
 
-        # Bepaal samenvatting
-        samenvatting = []
-        if kb or kbui: samenvatting.append(f"{kb + kbui} kleine ramen")
-        if gb or gbui: samenvatting.append(f"{gb + gbui} grote ramen")
-        if db or dbui: samenvatting.append(f"{db + dbui} dakramen")
+            # Maak een samenvatting van de gekozen ramen
+            samenvatting = []
+            if kb or kbui: samenvatting.append(f"{kb + kbui} kleine ramen")
+            if gb or gbui: samenvatting.append(f"{gb + gbui} grote ramen")
+            if db or dbui: samenvatting.append(f"{db + dbui} dakramen")
 
-        titel = "Ramen wassen"
-        if samenvatting:
-            titel += " (" + ", ".join(samenvatting) + ")"
+            titel = "Ramen wassen"
+            if samenvatting:
+                titel += " (" + ", ".join(samenvatting) + ")"
 
-        st.session_state.diensten.append({
-            "titel": titel,
-            "regels": regels,
-            "totaal": totaal
-        })
+            # Voeg de dienst toe aan de session state
+            st.session_state.diensten.append({
+                "titel": titel,
+                "regels": regels,
+                "totaal": totaal
+            })
+
+        else:
+            st.warning("Voer minimaal één raamoptie in.")  # Laat een waarschuwing zien als er geen ramen geselecteerd zijn
 
 # ---------------- GEVEL ----------------
 elif dienst == "Gevelreiniging":
