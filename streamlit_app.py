@@ -1,3 +1,4 @@
+st.session_state.diensten = []
 import streamlit as st
 from datetime import datetime
 from openpyxl import Workbook
