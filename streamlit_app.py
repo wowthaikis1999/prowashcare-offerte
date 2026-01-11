@@ -65,7 +65,7 @@ def maak_pdf(klant, adres, email):
         Paragraph("www.prowashcare.com", styles["Normal"]),
     ]
 
-    header = Table([[left, right]], colWidths=[11 * cm, 4 * cm])
+    header = Table([[left, right]], colWidths=[10 * cm, 5 * cm])
     header.setStyle([
         ("VALIGN", (0, 0), (-1, -1), "TOP"),
         ("ALIGN", (1, 0), (1, -1), "RIGHT"),
