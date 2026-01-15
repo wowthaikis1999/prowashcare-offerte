@@ -26,7 +26,6 @@ def bereken_totalen():
     totaal = subtotaal + btw
     return subtotaal, btw, totaal
 
-
 def maak_pdf(klant, adres, email):
     buffer = io.BytesIO()
 
@@ -74,25 +73,30 @@ def maak_pdf(klant, adres, email):
     content.append(header)
     content.append(Spacer(1, 20))
 
-    data = [["Omschrijving", "Bedrag (€)"]]
+    data = [["Omschrijving", "Aantal", "Bedrag (€)"]]
 
     for d in st.session_state.diensten:
-        data.append([Paragraph(f"<b>{d['titel']}</b>", styles["Normal"]), ""])
+        content.append([Paragraph(f"<b>{d['titel']}</b>", styles["Normal"]), "", ""])
         for r in d["regels"]:
-            data.append([f"– {r[0]}", f"{r[2]:.2f}"])
-        data.append(["Subtotaal", f"{d['totaal']:.2f}"])
-        data.append(["", ""])
+            omschrijving = r[0]
+            aantal = r[1]
+            prijs = r[2]
+            # Voeg aantal en prijs toe aan de tabel
+            data.append([f"– {omschrijving}", f"{aantal}x", f"€ {prijs:.2f}"])
+        data.append(["Subtotaal", "", f"€ {d['totaal']:.2f}"])
+        data.append(["", "", ""])
 
     subtotaal, btw, totaal = bereken_totalen()
 
-    data.append(["Subtotaal (excl. btw)", f"{subtotaal:.2f}"])
-    data.append(["BTW 21%", f"{btw:.2f}"])
+    data.append(["Subtotaal (excl. btw)", "", f"€ {subtotaal:.2f}"])
+    data.append(["BTW 21%", "", f"€ {btw:.2f}"])
     data.append([
         Paragraph("<b>Totaal (incl. btw)</b>", styles["Normal"]),
+        "",
         Paragraph(f"<b>{totaal:.2f}</b>", styles["Normal"]),
     ])
 
-    table = Table(data, colWidths=[12 * cm, 3 * cm])
+    table = Table(data, colWidths=[12 * cm, 3 * cm, 3 * cm])  # Pas de kolombreedtes aan
     table.setStyle([
         ("GRID", (0, 0), (-1, -1), 0.25, "grey"),
         ("BACKGROUND", (0, 0), (-1, 0), "#EEEEEE"),
@@ -104,7 +108,6 @@ def maak_pdf(klant, adres, email):
 
     buffer.seek(0)
     return buffer
-
 
 def maak_excel(klant):
     wb = Workbook()
@@ -166,85 +169,54 @@ if dienst == "Ramen wassen":
     dbui = c6.number_input("Dakramen-Moeilijk bereikbare ", 0, step=1)
 
     if st.button("Dienst toevoegen"):
-        regels = []
+        regels = []  # Lijst om de regels op te slaan.
 
-        if kb: regels.append(("Kleine ramen binnen", kb, kb * 2))
-        if kbui: regels.append(("Kleine ramen buiten", kbui, kbui * 1.5))
-        if gb: regels.append(("Grote ramen binnen", gb, gb * 2.5))
-        if gbui: regels.append(("Grote ramen buiten", gbui, gbui * 2))
-        if db: regels.append(("Dakramen binnen-Moeilijk bereikbare", db, db * 2.5))
-        if dbui: regels.append(("Dakramen buiten-Moeilijk bereikbare", dbui, dbui * 2.5))
+        # Controleer of het aantal ramen groter is dan 0 voor elke input en voeg deze toe aan de lijst
+        if kb > 0: 
+            regels.append(("Kleine ramen binnen", kb, kb * 2))
+        if kbui > 0: 
+            regels.append(("Kleine ramen buiten", kbui, kbui * 1.5))
+        if gb > 0: 
+            regels.append(("Grote ramen binnen", gb, gb * 2.5))
+        if gbui > 0: 
+            regels.append(("Grote ramen buiten", gbui, gbui * 2))
+        if db > 0: 
+            regels.append(("Dakramen binnen-Moeilijk bereikbare", db, db * 2.5))
+        if dbui > 0: 
+            regels.append(("Dakramen buiten-Moeilijk bereikbare", dbui, dbui * 2.5))
 
-        totaal = max(50, sum(r[2] for r in regels))
+        # Controleer of de lijst 'regels' daadwerkelijk items bevat
+        if regels:  # Als de lijst 'regels' niet leeg is, ga verder
+            totaal_diensten = sum(r[2] for r in regels)  # Som van de prijzen uit de 'regels' lijst
+            
+            # Pas de minimumprijs toe voor de ramen wassen (alleen als de prijs onder 50 euro is)
+            totaal = max(50, totaal_diensten)  # Minimumprijs wordt nog steeds toegepast voor de ramen wassen
 
-        samenvatting = []
-        if kb or kbui: samenvatting.append("kleine ramen")
-        if gb or gbui: samenvatting.append("grote ramen")
-        if db or dbui: samenvatting.append("dakramen")
+            # Voeg vervoerskosten toe als het totaal van de diensten en vervoerskosten > 50 euro
+            if len(st.session_state.diensten) > 0 and totaal + VERVOERSKOSTEN > 50:
+                totaal += VERVOERSKOSTEN  # Voeg de vervoerskosten toe bij een totaal van 50+
 
-        titel = "Ramen wassen"
-        if samenvatting:
-            titel += " (" + ", ".join(samenvatting) + ")"
+            # Maak een samenvatting van de gekozen ramen
+            samenvatting = []
+            if kb or kbui: samenvatting.append(f"{kb + kbui} kleine ramen")
+            if gb or gbui: samenvatting.append(f"{gb + gbui} grote ramen")
+            if db or dbui: samenvatting.append(f"{db + dbui} dakramen")
 
-        st.session_state.diensten.append({
-            "titel": titel,
-            "regels": regels,
-            "totaal": totaal
-        })
+            titel = "Ramen wassen"
+            if samenvatting:
+                titel += " (" + ", ".join(samenvatting) + ")"
 
-# ---------------- ZONNEPANELEN ----------------
-elif dienst == "Zonnepanelen":
-    aantal = st.number_input("Aantal zonnepanelen", 1, step=1)
-    if st.button("Dienst toevoegen"):
-        totaal = max(79, aantal * 5)
-        st.session_state.diensten.append({
-            "titel": "Zonnepanelen",
-            "regels": [("Zonnepanelen reinigen", aantal, aantal * 5)],
-            "totaal": totaal
-        })
-
-# ---------------- GEVEL ----------------
-elif dienst == "Gevelreiniging":
-    m2 = st.number_input("Oppervlakte (m²)", 0.1, step=0.1)
-    impreg = st.checkbox("Impregneren")
-    if st.button("Dienst toevoegen"):
-        regels = [("Gevel reinigen", m2, m2 * 5)]
-        if impreg:
-            regels.append(("Impregneren", m2, m2 * 4))
-        totaal = max(299, sum(r[2] for r in regels))
-        st.session_state.diensten.append({
-            "titel": "Gevelreiniging",
-            "regels": regels,
-            "totaal": totaal
-        })
-
-# ---------------- OPRIT ----------------
-elif dienst == "Oprit / Terras / Bedrijfsterrein":
-    type_k = st.radio("Type", ["Oprit", "Terras", "Bedrijfsterrein"], horizontal=True)
-    m2 = st.number_input("Oppervlakte (m²)", 0.1, step=0.1)
-
-    c1, c2, c3, c4 = st.columns(4)
-    reinigen = c1.checkbox("Reinigen")
-    zand = c2.checkbox("Zand invegen")
-    onkruid = c3.checkbox("Onkruidmijdend voegzand")
-    coating = c4.checkbox("Coating")
-
-    if st.button("Dienst toevoegen"):
-        regels = []
-        if reinigen: regels.append(("Reinigen", m2, m2 * 3.5))
-        if zand: regels.append(("Zand invegen", m2, m2 * 1))
-        if onkruid: regels.append(("Onkruidmijdend voegzand", m2, m2 * 2))
-        if coating: regels.append(("Coating", m2, m2 * 3.5))
-
-        if regels:
+            # Voeg de dienst toe aan de session state
             st.session_state.diensten.append({
-                "titel": type_k,
+                "titel": titel,
                 "regels": regels,
-                "totaal": sum(r[2] for r in regels)
+                "totaal": totaal
             })
 
+        else:
+            st.warning("Voer minimaal één raamoptie in.")  # Laat een waarschuwing zien als er geen ramen geselecteerd zijn
+
 # ---------------- VERVOERSKOSTEN ----------------
-st.divider()
 if st.button("🚗 Vervoerskosten toevoegen"):
     st.session_state.diensten.append({
         "titel": "Vervoerskosten",
@@ -285,4 +257,4 @@ if klant_naam:
     c1.download_button("📄 Maak PDF offerte", maak_pdf(klant_naam, klant_adres, klant_email), "offerte.pdf")
     c2.download_button("📊 Maak Excel offerte", maak_excel(klant_naam), "offerte.xlsx")
 else:
-    st.info("Vul eerst klantgegevens in") 
+    st.info("Vul eerst klantgegevens in")
