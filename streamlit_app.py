@@ -172,8 +172,8 @@ if dienst == "Ramen wassen":
         if kbui: regels.append(("Kleine ramen buiten", kbui, kbui * 1.5))
         if gb: regels.append(("Grote ramen binnen", gb, gb * 2.5))
         if gbui: regels.append(("Grote ramen buiten", gbui, gbui * 2))
-        if db: regels.append(("Dakramen binnen-Moeilijk bereikbare", db, db * 2.5))
-        if dbui: regels.append(("Dakramen buiten-Moeilijk bereikbare", dbui, dbui * 2.5))
+        if db: regels.append(("Dakramen binnen-Moeilijk bereikbare", db, db * 3))
+        if dbui: regels.append(("Dakramen buiten-Moeilijk bereikbare", dbui, dbui * 3))
 
         totaal = max(50, sum(r[2] for r in regels))
 
